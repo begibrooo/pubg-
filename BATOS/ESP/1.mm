@@ -11313,7 +11313,7 @@ bool isInsideFOV(int x, int y) {//自瞄圈判断
     return (x - circle_x) * (x - circle_x) + (y - circle_y) * (y - circle_y) <= rad * rad;
 }
 //自瞄依赖
-auto GetTargetForAimBotByDistance() {
+ASTExtraPlayerCharacter* GetTargetForAimBotByDistance() {
     ASTExtraPlayerCharacter *result = 0;
     float max = std::numeric_limits<float>::infinity();
     ASTExtraPlayerCharacter *localPlayer = 0;
@@ -11384,7 +11384,7 @@ auto GetTargetForAimBotByDistance() {
     }
     return result;
 }
-auto GetTargetByCrossDist() {
+ASTExtraPlayerCharacter* GetTargetByCrossDist() {
     ASTExtraPlayerCharacter *result = 0;
     float max = std::numeric_limits<float>::infinity();
 
@@ -19056,9 +19056,6 @@ std::wstring numi = L"[ SAFE ]";
 }*/
 // 构造显示文本
 
-                    }
-                }
-}
 if(载具){
     std::vector<ASTExtraVehicleBase*> ITS;
     GetAllActors(ITS);
@@ -19107,7 +19104,6 @@ if(载具){
                 g_PlayerController = localPlayerController;
             }
         }
-    }
 
     //from NSString to wstring
     std::wstring NStoWS ( NSString* Str )

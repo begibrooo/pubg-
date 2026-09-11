@@ -153,7 +153,7 @@
     
     // Footer Label
     self.footerLabel = [[UILabel alloc] init];
-    self.footerLabel.text = @"Telegram: @xxwhe";
+    self.footerLabel.text = @"Telegram: @rakhimovv_vip";
     self.footerLabel.font = [UIFont systemFontOfSize:12 weight:UIFontWeightSemibold];
     self.footerLabel.textColor = [UIColor colorWithRed:0.95 green:0.78 blue:0.25 alpha:0.85];
     self.footerLabel.textAlignment = NSTextAlignmentCenter;
@@ -283,8 +283,8 @@
     NSString *rawInput = self.passwordField.text ?: @"";
     NSString *cleanInput = [rawInput stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     
-    // Target password: "@xxwhe" -> Base64: "QHh4d2hl"
-    NSString *correctBase64 = @"QHh4d2hl";
+    // Target password: "RAKHIMOV-VIP" -> Base64: "UkFLSElNT1YtVklQ"
+    NSString *correctBase64 = @"UkFLSElNT1YtVklQ";
     NSString *encodedInput = [self toBase64:cleanInput];
     
     if (cleanInput.length == 0) {
@@ -293,7 +293,7 @@
         return;
     }
     
-    if ([cleanInput isEqualToString:@"@xxwhe"] || [encodedInput isEqualToString:correctBase64]) {
+    if ([cleanInput isEqualToString:@"RAKHIMOV-VIP"] || [encodedInput isEqualToString:correctBase64]) {
         self.messageLabel.textColor = [UIColor colorWithRed:0.35 green:1.0 blue:0.45 alpha:1.0];
         self.messageLabel.text = @"✓ Access Granted";
         [self showActivated];
