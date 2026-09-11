@@ -1,16 +1,16 @@
 Package: com.flexnote
-Name: @inflexibleN1
-Description: 
+Name: Rakhimov VIP
+Description: PUBG Mobile VIP Hack
 Section: Tweaks
 Depends: firmware (>= 11.0)
 Conflicts: 
 Replaces: 
 Priority: optional
-Author: @inflexibleN1
+Author: @xxwhe
 dev: 
 Homepage: 
 Depiction: 
-Maintainer: 
+Maintainer: @xxwhe
 Icon: 
 Architecture: iphoneos-arm64
 Version: 4.6.0

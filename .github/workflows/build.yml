@@ -27,7 +27,8 @@ jobs:
         run: |
           echo "Cloning Theos..."
           git clone --recursive https://github.com/theos/theos.git $THEOS
-          echo "Cloning iOS SDKs..."
+          echo "Installing iOS SDKs..."
+          rm -rf $THEOS/sdks
           git clone --depth=1 https://github.com/theos/sdks.git $THEOS/sdks
 
       - name: Compile Tweak
@@ -40,11 +41,12 @@ jobs:
           
           echo "Building inside $(pwd)..."
           make clean || true
-          make package FINALPACKAGE=1 -j$(sysctl -n hw.ncpu)
+          make FINALPACKAGE=1 -j$(sysctl -n hw.ncpu)
+          make package FINALPACKAGE=1 || true
           
           mkdir -p output_artifacts
-          find .theos -name "*.dylib" -exec cp -v {} output_artifacts/ \; 2>/dev/null || true
-          find packages -name "*.deb" -exec cp -v {} output_artifacts/ \; 2>/dev/null || true
+          find . -name "*.dylib" -not -path "./output_artifacts/*" -exec cp -v {} output_artifacts/ \; 2>/dev/null || true
+          find . -name "*.deb" -not -path "./output_artifacts/*" -exec cp -v {} output_artifacts/ \; 2>/dev/null || true
           
           echo "=== Generated Files ==="
           ls -la output_artifacts/
