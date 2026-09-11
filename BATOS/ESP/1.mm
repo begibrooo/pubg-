@@ -19144,13 +19144,13 @@ if(载具){
             if (cachedDrawHUDFunc != nullptr) {
                 isDrawHUD = (pFunc == cachedDrawHUDFunc);
             } else {
-                if (cachedDrawHUDIndex != -1 && pFunc->Name.ComparisonIndex == cachedDrawHUDIndex) {
+                if (cachedDrawHUDIndex != -1 && pFunc->NamePrivate.ComparisonIndex == cachedDrawHUDIndex) {
                     isDrawHUD = true;
                     cachedDrawHUDFunc = pFunc;
                 } else if (pFunc->GetFullName() == "Function Engine.HUD.ReceiveDrawHUD") {
                     isDrawHUD = true;
                     cachedDrawHUDFunc = pFunc;
-                    cachedDrawHUDIndex = pFunc->Name.ComparisonIndex;
+                    cachedDrawHUDIndex = pFunc->NamePrivate.ComparisonIndex;
                 }
             }
 
