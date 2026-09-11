@@ -3,7 +3,6 @@
 
 #include <stdio.h>
 #include <stdint.h>
-#define CC(str) str
 
 //-------------------------------------------------------------//
 // "Malware related compile-time hacks with C++11" by LeFF   //

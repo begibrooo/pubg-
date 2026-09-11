@@ -17,8 +17,8 @@
 #include "ico_font.h"
 #include <string>
 #include <filesystem>
-#import "对应读取依赖1Xcois.h"
-#import "对应读取依赖2Xcois.h"
+#import "Xcois1.h"
+#import "Xcois2.h"
 #include <stdio.h>
 #include <string.h>
 #include "Vector3.hpp"

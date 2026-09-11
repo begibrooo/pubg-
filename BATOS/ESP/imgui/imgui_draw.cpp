@@ -1607,25 +1607,6 @@ void ImDrawList::AddText(const ImVec2& pos, ImU32 col, const char* text_begin, c
     AddText(NULL, 0.0f, pos, col, text_begin, text_end);
 }
 
-extern ImVec4 strokeColor;
-extern float strokeIntensity;
-
-void ImDrawList::AddTextStroke(ImFont* font, float font_size, ImVec2 pos, ImU32 textColor, const char* text)
-{
-    ImU32 stroke = IM_COL32(0, 0, 0, 255);
-
-    AddText(font, font_size, ImVec2(pos.x + 1, pos.y), stroke, text);
-    AddText(font, font_size, ImVec2(pos.x - 1, pos.y), stroke, text);
-    AddText(font, font_size, ImVec2(pos.x, pos.y + 1), stroke, text);
-    AddText(font, font_size, ImVec2(pos.x, pos.y - 1), stroke, text);
-    AddText(font, font_size, ImVec2(pos.x + 1, pos.y + 1), stroke, text);
-    AddText(font, font_size, ImVec2(pos.x - 1, pos.y - 1), stroke, text);
-    AddText(font, font_size, ImVec2(pos.x + 1, pos.y - 1), stroke, text);
-    AddText(font, font_size, ImVec2(pos.x - 1, pos.y + 1), stroke, text);
-
-    AddText(font, font_size, pos, textColor, text);
-}
-
 void ImDrawList::AddTextX(const ImVec2 &pos, ImU32 col, float font_size, const char *text_begin, const char *text_end) {
     AddText(NULL, font_size, pos, col, text_begin, text_end);
 }

@@ -5,7 +5,11 @@
 //  2021/5/18.
   
 
+#if __has_include("HeeeNoScreenShotView.h")
+#import "HeeeNoScreenShotView.h"
+#elif __has_include("ESP/HeeeNoScreenShotView.h")
 #import "ESP/HeeeNoScreenShotView.h"
+#endif
 
 @interface HeeeNoScreenShotView ()
 @property (nonatomic,strong) UITextField *textField;
