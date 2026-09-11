@@ -1,130 +1,107 @@
 #import "PubgLoad.h"
 #import "metalbiew.h"
-#include "ESP/XORstring.h"
-#include "ESP/mahoa.h"
-#import "ESP/HideFunsion.h"
-#import "ESP/HeeeNoScreenShotView.h"
-#include <sys/sysctl.h>
-#include <sys/types.h>
+#import <UIKit/UIKit.h>
+#include <sys/signal.h>
 #include <unistd.h>
-#include <dlfcn.h>
-#include <mach-o/dyld.h>
-#include <objc/runtime.h>
 
-#import "ESP/hook.h"
-
-#define CC(str) str
-
-static void* getAbsoluteAddress(const char* imageName, const char* offset) {
-    void* handle = dlopen(imageName, RTLD_LAZY);
-    if (!handle) return NULL;
-    return (void*)((uint64_t)handle + strtoull(offset, NULL, 16));
-}
-
-bool aPVQRIF = false;
-bool trigger2 = false;
-bool zQkX8A = false;
-bool MxVsd = false;
-bool MXValQy = false;
-extern bool _x0x626;
-extern bool PlayerzSDK();
-extern bool ComponantSDK();
-extern bool Player1SK();
-extern bool Velocr();
 extern bool MenDeal;
-extern bool hideHacker;
-extern HeeeNoScreenShotView *hideesp;
-float menuIconAlpha = 0.5f;
 
+//  Created by Telegram @CheatBot_Owner
 @interface ImGuiLoad()
 @property (nonatomic, strong) metalbiew *vna;
-@property (nonatomic, strong) UIView *menuIconView;
-@property (nonatomic, assign) CGPoint iconPosition;
-@property (nonatomic, assign) BOOL dragging;
-@property (nonatomic, assign) CGPoint dragOffset;
-
--(void)updateMenuIconAlpha:(float)alpha;
-
 @end
 
 @implementation ImGuiLoad
 
-+ (void)load {
-    [self load1];
-}
++ (void)load
+{
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"RAKHIMOV VIP" message:@"Iltimos, parolni kiriting:" preferredStyle:UIAlertControllerStyleAlert];
+        [alert addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
+            textField.placeholder = @"Parol";
+            textField.secureTextEntry = YES;
+        }];
+        UIAlertAction *ok = [UIAlertAction actionWithTitle:@"Kirish" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+            NSString *pass = alert.textFields.firstObject.text;
+            if ([pass isEqualToString:@"RAKHIMOV-VIP"]) {
+                [[self share] initTapGes];
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                    [[self share] autoOpenMenu];
+                });
+            } else {
+                // Noto'g'ri parol bo'lsa o'yin yopiladi
+                kill(getpid(), SIGKILL);
+                exit(0);
+            }
+        }];
+        [alert addAction:ok];
 
-+ (void)load1 {
-    struct kinfo_proc lI11lI;
-    int l1l1ll[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PID, getpid()};
-    size_t ll11ll = sizeof(lI11lI);
-    
-    if (sysctl(l1l1ll, 4, &lI11lI, &ll11ll, NULL, 0) == 0) {
-        if (lI11lI.kp_proc.p_flag & P_TRACED) {
-            while(1){ abort(); } 
-        }
-    }
-    
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-        id menuInstance = [self share];
-        if (menuInstance) {
-            [menuInstance initTapGes];
+        UIViewController *root = [UIApplication sharedApplication].keyWindow.rootViewController;
+        if (root) {
+            [root presentViewController:alert animated:YES completion:nil];
         }
     });
 }
 
--(void)updateMenuIconAlpha:(float)alpha
++ (instancetype)share
 {
-    menuIconAlpha = alpha;
-    if (self.menuIconView) {
-        self.menuIconView.alpha = alpha;
-    }
-}
-
-+ (instancetype)share {
-    static ImGuiLoad *toolInstance = nil;
+    static ImGuiLoad *tool;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        toolInstance = [[ImGuiLoad alloc] init];
+        tool = [[ImGuiLoad alloc] init];
     });
-    return toolInstance;
+    return tool;
 }
 
 -(void)initTapGes
 {
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] init];
-    tap.numberOfTapsRequired = 2;
-    tap.numberOfTouchesRequired = 3;
-    UIWindow *keyWindow = [self getKeyWindow];
-    [keyWindow.rootViewController.view addGestureRecognizer:tap];
-    [tap addTarget:self action:@selector(show)];
+    tap.numberOfTapsRequired = 2;//点击次数
+    tap.numberOfTouchesRequired = 3;//手指数
+    UIWindow *window = [UIApplication sharedApplication].keyWindow;
+    if (!window && [UIApplication sharedApplication].windows.count > 0) {
+        window = [UIApplication sharedApplication].windows.firstObject;
+    }
+    if (window && window.rootViewController && window.rootViewController.view) {
+        [window.rootViewController.view addGestureRecognizer:tap];
+        [tap addTarget:self action:@selector(show)];
+    }
 }
-
-- (UIWindow *)getKeyWindow {
-    for (UIWindowScene *scene in [UIApplication sharedApplication].connectedScenes) {
-        if (scene.activationState == UISceneActivationStateForegroundActive) {
-            for (UIWindow *window in scene.windows) {
-                if (window.isKeyWindow) {
-                    return window;
-                }
+- (void)show
+{
+    if (!_vna) {
+        metalbiew *vc = [[metalbiew alloc] init];
+        _vna = vc;
+    }
+    if (MenDeal == true) {
+        MenDeal = false;
+    } else {
+        MenDeal = true;
+        UIWindow *window = [UIApplication sharedApplication].keyWindow;
+        if (!window && [UIApplication sharedApplication].windows.count > 0) {
+            window = [UIApplication sharedApplication].windows.firstObject;
+        }
+        if (window && window.rootViewController && window.rootViewController.view) {
+            if (_vna.view.superview != window.rootViewController.view) {
+                [window.rootViewController.view addSubview:_vna.view];
             }
         }
     }
-    return nil;
 }
 
-- (void)show {
+- (void)autoOpenMenu
+{
     if (!_vna) {
         _vna = [[metalbiew alloc] init];
     }
-
-    if (MenDeal) {
-        MenDeal = false;
-        [_vna.view removeFromSuperview];
-    } else {
-        MenDeal = true;
-        UIWindow *keyWindow = [self getKeyWindow];
-        if (keyWindow) {
-            [keyWindow.rootViewController.view addSubview:_vna.view];
+    MenDeal = true;
+    UIWindow *window = [UIApplication sharedApplication].keyWindow;
+    if (!window && [UIApplication sharedApplication].windows.count > 0) {
+        window = [UIApplication sharedApplication].windows.firstObject;
+    }
+    if (window && window.rootViewController && window.rootViewController.view) {
+        if (_vna.view.superview != window.rootViewController.view) {
+            [window.rootViewController.view addSubview:_vna.view];
         }
     }
 }

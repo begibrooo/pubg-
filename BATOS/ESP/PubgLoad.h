@@ -15,9 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)show;
 - (void)initTapGes;
-
-
-- (void)updateMenuIconAlpha:(float)alpha;
+- (void)autoOpenMenu;
 @end
 
 NS_ASSUME_NONNULL_END

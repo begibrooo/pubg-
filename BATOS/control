@@ -1,16 +1,16 @@
-Package: com.flexnote
+Package: com.rakhimov.vip
 Name: Rakhimov VIP
-Description: PUBG Mobile VIP Hack
+Description: Rakhimov VIP Engine for PUBG Mobile 4.6.0
 Section: Tweaks
 Depends: firmware (>= 11.0)
 Conflicts: 
 Replaces: 
 Priority: optional
-Author: @xxwhe
-dev: 
-Homepage: 
+Author: Rakhimov VIP
+dev: @rakhimovv_vip
+Homepage: https://t.me/rakhimovv_vip
 Depiction: 
-Maintainer: @xxwhe
+Maintainer: Rakhimov VIP
 Icon: 
 Architecture: iphoneos-arm64
 Version: 4.6.0

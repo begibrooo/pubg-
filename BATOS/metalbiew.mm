@@ -1321,9 +1321,11 @@ INI* config;
 
 
 - (void)loadView {
+    HeeeNoScreenShotView *noRecordView = [[HeeeNoScreenShotView alloc] initWithFrame:CGRectMake(0, 0, kWidth, kHeight)];
+    self.view = noRecordView;
 
-self.view = [[MTKView alloc] initWithFrame:CGRectMake(0, 0, kWidth, kHeight)];
-
+    _mtkView = [[MTKView alloc] initWithFrame:CGRectMake(0, 0, kWidth, kHeight)];
+    [self.view addSubview:_mtkView];
 }
 
 - (void)viewDidLoad {
