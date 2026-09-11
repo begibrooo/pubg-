@@ -48,6 +48,13 @@ NSString *xrpb = NSSENCRYPT("Paste Key...");
 
 
 
+static inline float CalcVectorDist(const FVector& a, const FVector& b) {
+    float dx = a.X - b.X;
+    float dy = a.Y - b.Y;
+    float dz = a.Z - b.Z;
+    return sqrtf(dx * dx + dy * dy + dz * dz);
+}
+
 @interface metalbiew () <MTKViewDelegate>
 @property (nonatomic, strong) IBOutlet MTKView *mtkView;
 @property (nonatomic, strong) id <MTLDevice> device;
@@ -16818,9 +16825,9 @@ if (枪械变大 && localPlayer) {
                                 float Distance = 0.f;
                                 if (localPlayer && !localPlayer->bDead) {
                                     Distance = Player->GetDistanceTo(localPlayer) / 100.f;
-                                } else if (localPlayerController && localPlayerController->PlayerCameraManager) {
+                                } else if (localPlayerController && localPlayerController->PlayerCameraManager && Player->RootComponent) {
                                     FVector camPos = localPlayerController->PlayerCameraManager->CameraCache.POV.Location;
-                                    Distance = UKismetMathLibrary::Vector_Distance(camPos, Player->RootComponent->RelativeLocation) / 100.f;
+                                    Distance = CalcVectorDist(camPos, Player->RootComponent->RelativeLocation) / 100.f;
                                 } else if (localPlayer) {
                                     Distance = Player->GetDistanceTo(localPlayer) / 100.f;
                                 }
@@ -16967,7 +16974,7 @@ if(Config.ESPMenu.背敌  && IsLogin){
                                     bool Useless = false;
                                     float myYaw = localPlayer ? localPlayer->K2_GetActorRotation().Yaw : 
                                                   (g_PlayerController && g_PlayerController->PlayerCameraManager ? g_PlayerController->PlayerCameraManager->CameraCache.POV.Rotation.Yaw : 0.f);
-                                    FVector myHeadLoc = localPlayer ? localPlayer->GetHeadLocation(false) : EnemyPosition;
+                                    FVector myHeadLoc = localPlayer ? localPlayer->GetHeadLocation(false) : (g_PlayerController && g_PlayerController->PlayerCameraManager ? g_PlayerController->PlayerCameraManager->CameraCache.POV.Location : FVector(0.f,0.f,0.f));
                                     FVector2D EntityPos = WorldToRadar(myYaw, Head, myHeadLoc, NULL, NULL, FVector((float)screenWidth, (float)screenHeight, 0.f), Useless);
                                     float radar_range = 150.f;
                                     FVector angle;
@@ -18289,7 +18296,7 @@ if(新骨骼  && IsLogin)
                 if (localPlayer) {
                     Distance = PickUpList->GetDistanceTo(localPlayer) / 100.f;
                 } else if (localPlayerController && localPlayerController->PlayerCameraManager) {
-                    Distance = UKismetMathLibrary::Vector_Distance(localPlayerController->PlayerCameraManager->CameraCache.POV.Location, PickUpList->K2_GetActorLocation()) / 100.f;
+                    Distance = CalcVectorDist(localPlayerController->PlayerCameraManager->CameraCache.POV.Location, PickUpList->K2_GetActorLocation()) / 100.f;
                 }
                 if(Distance>100)continue;//这是100米之外 过滤掉
                 auto Location = PickUpList->K2_GetActorLocation();
@@ -18922,7 +18929,7 @@ UGameplayStatics* gGameplayStatics = (UGameplayStatics*)UGameplayStatics::Static
                     if (localPlayer) {
                         gDistance = Grenade->GetDistanceTo(localPlayer) / 100.f;
                     } else if (localPlayerController && localPlayerController->PlayerCameraManager) {
-                        gDistance = UKismetMathLibrary::Vector_Distance(localPlayerController->PlayerCameraManager->CameraCache.POV.Location, RootComponent->RelativeLocation) / 100.f;
+                        gDistance = CalcVectorDist(localPlayerController->PlayerCameraManager->CameraCache.POV.Location, RootComponent->RelativeLocation) / 100.f;
                     }
                     if (gDistance <= 200.f)
                     {
@@ -19069,7 +19076,7 @@ if(载具){
         if (localPlayer) {
             Distance = Vehicle->GetDistanceTo(localPlayer) / 100.f;
         } else if (localPlayerController && localPlayerController->PlayerCameraManager) {
-            Distance = UKismetMathLibrary::Vector_Distance(localPlayerController->PlayerCameraManager->CameraCache.POV.Location, Vehicle->K2_GetActorLocation()) / 100.f;
+            Distance = CalcVectorDist(localPlayerController->PlayerCameraManager->CameraCache.POV.Location, Vehicle->K2_GetActorLocation()) / 100.f;
         }
 
         FVector2D vehiclePos;
@@ -19104,6 +19111,7 @@ if(载具){
                 g_PlayerController = localPlayerController;
             }
         }
+    }
 
     //from NSString to wstring
     std::wstring NStoWS ( NSString* Str )
