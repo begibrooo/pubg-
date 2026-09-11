@@ -39,7 +39,7 @@
     
     // Title in Banner
     UILabel *titleLabel = [[UILabel alloc] init];
-    titleLabel.text = @"RAKHIMOV VIP - @xxwhe";
+    titleLabel.text = @"DRDEV - VNxG4NG";
     titleLabel.font = [UIFont systemFontOfSize:18 weight:UIFontWeightHeavy];
     titleLabel.textColor = [UIColor blackColor];
     titleLabel.textAlignment = NSTextAlignmentCenter;
@@ -184,8 +184,8 @@
 
 - (void)verifyPassword {
     NSString *enteredPassword = self.passwordField.text;
-    // Base64 of "@xxwhe" is "QHh4d2hl"
-    NSString *correctBase64 = @"QHh4d2hl";
+    // Base64 of "DRDEV-VNxG4NG" is "RFJERVYtVk54RzRORw=="
+    NSString *correctBase64 = @"RFJERVYtVk54RzRORw==";
     NSString *encodedInput = [self toBase64:enteredPassword];
     
     if (!enteredPassword || enteredPassword.length == 0) {
