@@ -322,14 +322,8 @@ static NSString * EVPObfuscateString(NSString *input) {
 
 #pragma mark - Bootstrap
 
-__attribute__((constructor))
+// __attribute__((constructor))
 static void ErrorVIPBootstrap() {
-    EVP_LOG(@"Bootstrapping ErrorVIP panel core");
-    EVPPanelSession *session = [EVPPanelSession shared];
-    session.device = [EVPDeviceInfo new];
-    session.device.udid = @"EVP-UDID-LOCAL-0001";
-    session.device.model = @"iPhone";
-    session.device.systemVersion = @"iOS 16.x";
-    [session startSession];
+    // Disabled bootstrap
 }
 

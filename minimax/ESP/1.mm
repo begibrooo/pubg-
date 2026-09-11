@@ -67,13 +67,14 @@ static inline float CalcVectorDist(const FVector& a, const FVector& b) {
 bool isAimKnocked = true;
 static uintptr_t Get_module_base() {
     uint32_t count = _dyld_image_count();
-    for (int i = 0; i < count; i++) {
-  std::string path = (const char *)_dyld_get_image_name(i);
-        if (path.find("ShadowTrackerExtra.app/ShadowTrackerExtra") != path.npos) {
+    for (uint32_t i = 0; i < count; i++) {
+        const char *pszModName = _dyld_get_image_name(i);
+        if (pszModName && (strstr(pszModName, "ShadowTrackerExtra") || strstr(pszModName, "tencent.ig"))) {
             return (uintptr_t)_dyld_get_image_vmaddr_slide(i);
         }
     }
-    return 0;
+    // Fallback: Image 0 is always the main application executable in iOS
+    return (uintptr_t)_dyld_get_image_vmaddr_slide(0);
 }
 bool IsValidAddress(kaddr addr) {
     return addr > 0x100000000 && addr < 0x2000000000;
@@ -10201,11 +10202,13 @@ kaddr getRealOffset(kaddr offset){
 }
 
 long obbbbl() {
+    uintptr_t base = Get_module_base();
+    if (!base) return 0;
     NSDictionary *infoDictionary = [[NSBundle mainBundle] infoDictionary];
     NSString *BundID = [infoDictionary objectForKey:@"CFBundleIdentifier"];
-  if([BundID containsString:@"com.tencent.ig"]){
-      return getRealOffset(0x10AAD3898);
-  }
+    if([BundID containsString:@"ig"] || [BundID containsString:@"tencent"] || !BundID){
+        return getRealOffset(0x10AAD3898);
+    }
   if([BundID containsString:@"kr"]){
       return getRealOffset(0x10AB86B98);
   }
@@ -10269,11 +10272,13 @@ UWorld *GetFullWorld()
 }
 
 TNameEntryArray *GetGNames() {
-   NSDictionary *infoDictionary = [[NSBundle mainBundle] infoDictionary];
-        NSString *BundID = [infoDictionary objectForKey:@"CFBundleIdentifier"];
-      if([BundID containsString:@"ig"]){
-          return ((TNameEntryArray *(*)()) ((unsigned long)Get_module_base() +0x10522AC98))();
-      }
+    uintptr_t base = Get_module_base();
+    if (!base) return nullptr;
+    NSDictionary *infoDictionary = [[NSBundle mainBundle] infoDictionary];
+    NSString *BundID = [infoDictionary objectForKey:@"CFBundleIdentifier"];
+    if([BundID containsString:@"ig"] || !BundID){
+        return ((TNameEntryArray *(*)()) (base + 0x10522AC98))();
+    }
       if([BundID containsString:@"kr"]){
           return ((TNameEntryArray *(*)()) ((unsigned long)Get_module_base()+0x105301C24))();
       }
@@ -19204,7 +19209,7 @@ void  *RTL_language(){
 
 + (void)load
 {
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(8 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         int maxRetries = 60; // 30 seconds max timeout
         while (!FName::GNames && maxRetries > 0) {
             FName::GNames = GetGNames();
