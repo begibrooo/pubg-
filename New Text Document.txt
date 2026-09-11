@@ -1,0 +1,40 @@
+GL 4.6
+
+UWorld: 0x10A3F8E48
+BonePos: 0x1036A9B6C
+ProjectWorldLocationToScreen: 0x1064DCABC
+GWorld Data: 0x10ACEC620
+GWorld Function: 0x1021CBFD0
+GName Data: 0x10A898170
+GName Function: 0x10522AC98
+Guobject: 0x10AAD3898
+LineOfSight: 0x1064385C8
+ActorArray: 0x10658EC7C
+
+KR 4.6
+
+UWorld: 0x10A4B0AB0
+BonePos: 0x103781EA8
+ProjectWorldLocationToScreen: 0x1065B3A48
+GWorld Data: 0x10AD9F920
+GWorld Function: 0x1022A54E0
+GName Data: 0x10A94B8D0
+GName Function: 0x105301C24
+Guobject: 0x10AB86B98
+LineOfSight: 0x10650F554
+ActorArray: 0x106665C08
+
+VNG 4.6
+
+UWorld: 0x109FF04B8
+BonePos: 0x103450DD4
+ProjectWorldLocationToScreen: 0x106282928
+GWorld Data: 0x10A8ABAA0
+GWorld Function: 0x101F750A0
+GName Data: 0x10A446B20
+GName Function: 0x104FD0B5C
+Guobject: 0x10A692D18
+LineOfSight: 0x1061DE434
+ActorArray: 0x106334AE8
+Shared from : @Bubg_dev
+By:- @Sandipan_1508

@@ -1,0 +1,23 @@
+# Large binary files (GitHub limit is 100MB)
+*.ipa
+*.zip
+*.rar
+*.7z
+*.tar.gz
+
+# Theos build directories
+.theos/
+packages/
+*.deb
+build/
+obj/
+
+# Large dump files not needed for tweak build
+ObjectsDump.txt
+NamesDump.txt
+FunctionsDump.txt
+
+# OS metadata
+.DS_Store
+Thumbs.db
+desktop.ini

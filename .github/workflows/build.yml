@@ -1,0 +1,61 @@
+name: Build iOS Tweak (App.dylib & DEB)
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    env:
+      THEOS: ${{ github.workspace }}/theos
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Build Dependencies
+        run: |
+          brew install ldid dpkg
+
+      - name: Setup Theos & iOS SDK
+        run: |
+          echo "Cloning Theos..."
+          git clone --recursive https://github.com/theos/theos.git $THEOS
+          echo "Cloning iOS SDKs..."
+          git clone --depth=1 https://github.com/theos/sdks.git $THEOS/sdks
+
+      - name: Compile Tweak
+        run: |
+          TARGET_DIR="."
+          if [ -f "BATOS/Makefile" ]; then
+            TARGET_DIR="BATOS"
+          fi
+          cd "$TARGET_DIR"
+          
+          echo "Building inside $(pwd)..."
+          make clean || true
+          make package FINALPACKAGE=1 -j$(sysctl -n hw.ncpu)
+          
+          mkdir -p output_artifacts
+          find .theos -name "*.dylib" -exec cp -v {} output_artifacts/ \; 2>/dev/null || true
+          find packages -name "*.deb" -exec cp -v {} output_artifacts/ \; 2>/dev/null || true
+          
+          echo "=== Generated Files ==="
+          ls -la output_artifacts/
+
+      - name: Upload Artifacts (App.dylib & DEB)
+        uses: actions/upload-artifact@v4
+        with:
+          name: App-Tweak-Build
+          path: |
+            **/output_artifacts/*.dylib
+            **/output_artifacts/*.deb
+            **/*.dylib
+            **/*.deb
+          if-no-files-found: warn
