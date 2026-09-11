@@ -1416,113 +1416,83 @@ static id<MTLTexture> LoadTextureFromBase64(id<MTLDevice> device, const std::str
     ImGui::StyleColorsDark();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
 
-// ==================== ستایلی ڕەش و زەرد بۆ XOLIYAROV VIP ====================
+// ==================== MODERN SLEEK OBSIDIAN & GOLD VIP THEME ====================
 ImGuiStyle& style = ImGui::GetStyle();
 
-// ستایلی گشتی
-style.WindowPadding = ImVec2(10, 10);
-style.WindowRounding = 5.0f;
-style.FramePadding = ImVec2(6, 4);
-style.FrameRounding = 4.0f;
-style.ItemSpacing = ImVec2(8, 6);
-style.ItemInnerSpacing = ImVec2(6, 4);
+// Metrics & Rounding
+style.WindowPadding = ImVec2(14, 12);
+style.WindowRounding = 14.0f;
+style.ChildRounding = 10.0f;
+style.FramePadding = ImVec2(8, 6);
+style.FrameRounding = 7.0f;
+style.PopupRounding = 12.0f;
+style.ScrollbarRounding = 10.0f;
+style.GrabRounding = 6.0f;
+style.TabRounding = 8.0f;
+style.WindowBorderSize = 1.2f;
+style.ChildBorderSize = 0.8f;
+style.FrameBorderSize = 0.5f;
+style.ItemSpacing = ImVec2(10, 8);
+style.ItemInnerSpacing = ImVec2(8, 5);
 style.IndentSpacing = 20.0f;
-style.ScrollbarSize = 12.0f;
-style.GrabMinSize = 16.0f;
+style.ScrollbarSize = 8.0f;
+style.GrabMinSize = 14.0f;
 style.WindowTitleAlign = ImVec2(0.5f, 0.5f);
 style.ButtonTextAlign = ImVec2(0.5f, 0.5f);
 style.DisplaySafeAreaPadding = ImVec2(4, 4);
 
-// ==================== ڕەنگەکانی ستایلی ڕەش و زەرد ====================
-
-// ----- تێکستەکان (سپی بۆ خوێندنەوەی ئاسان) -----
-style.Colors[ImGuiCol_Text] = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-style.Colors[ImGuiCol_TextDisabled] = ImVec4(0.6f, 0.6f, 0.6f, 1.0f);
-
-// ----- پشتەوەکان (ڕەشی قوڵ) -----
-style.Colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.05f, 0.03f, 0.98f);
-style.Colors[ImGuiCol_ChildBg] = ImVec4(0.08f, 0.07f, 0.04f, 1.0f);
-style.Colors[ImGuiCol_PopupBg] = ImVec4(0.06f, 0.05f, 0.03f, 1.0f);
-
-// ----- چوارچێوەکان (زەردی تاریک) -----
-style.Colors[ImGuiCol_Border] = ImVec4(0.85f, 0.70f, 0.10f, 0.60f);
-style.Colors[ImGuiCol_BorderShadow] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
-
-// ----- فرەیمەکان -----
-style.Colors[ImGuiCol_FrameBg] = ImVec4(0.10f, 0.09f, 0.05f, 1.0f);
-style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.25f, 0.20f, 0.06f, 1.0f);
-style.Colors[ImGuiCol_FrameBgActive] = ImVec4(0.40f, 0.32f, 0.08f, 1.0f);
-
-// ----- ناونیشانی پەنجەرە -----
-style.Colors[ImGuiCol_TitleBg] = ImVec4(0.10f, 0.08f, 0.03f, 1.0f);
-style.Colors[ImGuiCol_TitleBgActive] = ImVec4(0.18f, 0.14f, 0.04f, 1.0f);
-style.Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.07f, 0.06f, 0.02f, 1.0f);
-
-// ----- مینۆبار -----
-style.Colors[ImGuiCol_MenuBarBg] = ImVec4(0.09f, 0.07f, 0.03f, 1.0f);
-
-// ----- سکرۆڵبار -----
-style.Colors[ImGuiCol_ScrollbarBg] = ImVec4(0.07f, 0.06f, 0.03f, 1.0f);
-style.Colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.40f, 0.32f, 0.08f, 1.0f);
-style.Colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.60f, 0.48f, 0.12f, 1.0f);
-style.Colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.85f, 0.68f, 0.15f, 1.0f);
-
-// ----- چێکمارک (CheckMark) -----
-style.Colors[ImGuiCol_CheckMark] = ImVec4(1.0f, 0.85f, 0.15f, 1.0f);
-
-// ----- سلایدەر -----
-style.Colors[ImGuiCol_SliderGrab] = ImVec4(0.50f, 0.40f, 0.10f, 1.0f);
-style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(0.90f, 0.75f, 0.15f, 1.0f);
-
-// ----- دوگمەکان (زەرد لەسەر هۆڤەر) -----
-style.Colors[ImGuiCol_Button] = ImVec4(0.12f, 0.10f, 0.04f, 1.0f);
-style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.65f, 0.52f, 0.10f, 1.0f);
-style.Colors[ImGuiCol_ButtonActive] = ImVec4(0.95f, 0.80f, 0.12f, 1.0f);
-
-// ----- هێدەر -----
-style.Colors[ImGuiCol_Header] = ImVec4(0.14f, 0.11f, 0.04f, 1.0f);
-style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.60f, 0.48f, 0.10f, 1.0f);
-style.Colors[ImGuiCol_HeaderActive] = ImVec4(0.85f, 0.70f, 0.12f, 1.0f);
-
-// ----- جیاکەرەوەکان -----
-style.Colors[ImGuiCol_Separator] = ImVec4(0.45f, 0.36f, 0.08f, 1.0f);
-style.Colors[ImGuiCol_SeparatorHovered] = ImVec4(0.75f, 0.60f, 0.12f, 1.0f);
-style.Colors[ImGuiCol_SeparatorActive] = ImVec4(0.95f, 0.78f, 0.15f, 1.0f);
-
-// ----- ڕیسایز گریپ -----
-style.Colors[ImGuiCol_ResizeGrip] = ImVec4(0.40f, 0.32f, 0.08f, 1.0f);
-style.Colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.70f, 0.56f, 0.12f, 1.0f);
-style.Colors[ImGuiCol_ResizeGripActive] = ImVec4(0.95f, 0.80f, 0.15f, 1.0f);
-
-// ----- تابەکان (Tabs) -----
-style.Colors[ImGuiCol_Tab] = ImVec4(0.09f, 0.07f, 0.03f, 1.0f);
-style.Colors[ImGuiCol_TabHovered] = ImVec4(0.55f, 0.44f, 0.09f, 1.0f);
-style.Colors[ImGuiCol_TabActive] = ImVec4(0.22f, 0.18f, 0.05f, 1.0f);
-style.Colors[ImGuiCol_TabUnfocused] = ImVec4(0.07f, 0.06f, 0.02f, 1.0f);
-style.Colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.12f, 0.10f, 0.03f, 1.0f);
-
-// ----- گراف و پلۆت (زەرد) -----
-style.Colors[ImGuiCol_PlotLines] = ImVec4(1.0f, 0.85f, 0.15f, 1.0f);
-style.Colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.0f, 0.70f, 0.10f, 1.0f);
-style.Colors[ImGuiCol_PlotHistogram] = ImVec4(0.90f, 0.75f, 0.12f, 1.0f);
-style.Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.0f, 0.85f, 0.15f, 1.0f);
-
-// ----- خشتەکان (Table) -----
-style.Colors[ImGuiCol_TableHeaderBg] = ImVec4(0.11f, 0.09f, 0.04f, 1.0f);
-style.Colors[ImGuiCol_TableBorderStrong] = ImVec4(0.50f, 0.40f, 0.10f, 1.0f);
-style.Colors[ImGuiCol_TableBorderLight] = ImVec4(0.25f, 0.20f, 0.05f, 1.0f);
-style.Colors[ImGuiCol_TableRowBg] = ImVec4(0.08f, 0.07f, 0.04f, 1.0f);
-style.Colors[ImGuiCol_TableRowBgAlt] = ImVec4(0.06f, 0.05f, 0.03f, 1.0f);
-
-// ----- تێکستی دیاریکراو -----
-style.Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.70f, 0.56f, 0.12f, 1.0f);
-
-// ----- شمایلەکانی تر -----
-style.Colors[ImGuiCol_DragDropTarget] = ImVec4(1.0f, 0.85f, 0.15f, 1.0f);
-style.Colors[ImGuiCol_NavHighlight] = ImVec4(0.85f, 0.70f, 0.12f, 1.0f);
-style.Colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.0f, 0.85f, 0.15f, 1.0f);
-style.Colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.0f, 0.0f, 0.0f, 0.6f);
-style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.0f, 0.0f, 0.0f, 0.5f);
+// Palette - Sleek Carbon/Obsidian & Neon Gold
+style.Colors[ImGuiCol_Text]                  = ImVec4(0.96f, 0.96f, 0.98f, 1.00f);
+style.Colors[ImGuiCol_TextDisabled]          = ImVec4(0.50f, 0.53f, 0.60f, 1.00f);
+style.Colors[ImGuiCol_WindowBg]              = ImVec4(0.08f, 0.09f, 0.11f, 0.94f);
+style.Colors[ImGuiCol_ChildBg]               = ImVec4(0.12f, 0.13f, 0.16f, 0.70f);
+style.Colors[ImGuiCol_PopupBg]               = ImVec4(0.09f, 0.10f, 0.13f, 0.98f);
+style.Colors[ImGuiCol_Border]                = ImVec4(0.95f, 0.78f, 0.25f, 0.45f);
+style.Colors[ImGuiCol_BorderShadow]          = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+style.Colors[ImGuiCol_FrameBg]               = ImVec4(0.14f, 0.15f, 0.19f, 0.85f);
+style.Colors[ImGuiCol_FrameBgHovered]        = ImVec4(0.20f, 0.22f, 0.28f, 1.00f);
+style.Colors[ImGuiCol_FrameBgActive]         = ImVec4(0.26f, 0.28f, 0.36f, 1.00f);
+style.Colors[ImGuiCol_TitleBg]               = ImVec4(0.11f, 0.12f, 0.15f, 1.00f);
+style.Colors[ImGuiCol_TitleBgActive]         = ImVec4(0.14f, 0.13f, 0.09f, 1.00f);
+style.Colors[ImGuiCol_TitleBgCollapsed]      = ImVec4(0.08f, 0.09f, 0.11f, 1.00f);
+style.Colors[ImGuiCol_MenuBarBg]             = ImVec4(0.11f, 0.12f, 0.15f, 1.00f);
+style.Colors[ImGuiCol_ScrollbarBg]           = ImVec4(0.06f, 0.07f, 0.09f, 0.50f);
+style.Colors[ImGuiCol_ScrollbarGrab]         = ImVec4(0.28f, 0.30f, 0.36f, 0.80f);
+style.Colors[ImGuiCol_ScrollbarGrabHovered]  = ImVec4(0.95f, 0.78f, 0.25f, 0.65f);
+style.Colors[ImGuiCol_ScrollbarGrabActive]   = ImVec4(1.00f, 0.84f, 0.25f, 1.00f);
+style.Colors[ImGuiCol_CheckMark]             = ImVec4(1.00f, 0.84f, 0.25f, 1.00f);
+style.Colors[ImGuiCol_SliderGrab]            = ImVec4(0.95f, 0.78f, 0.25f, 0.90f);
+style.Colors[ImGuiCol_SliderGrabActive]      = ImVec4(1.00f, 0.88f, 0.35f, 1.00f);
+style.Colors[ImGuiCol_Button]                = ImVec4(0.16f, 0.18f, 0.23f, 0.85f);
+style.Colors[ImGuiCol_ButtonHovered]         = ImVec4(0.95f, 0.78f, 0.25f, 0.35f);
+style.Colors[ImGuiCol_ButtonActive]          = ImVec4(0.95f, 0.78f, 0.25f, 0.70f);
+style.Colors[ImGuiCol_Header]                = ImVec4(0.18f, 0.20f, 0.26f, 0.70f);
+style.Colors[ImGuiCol_HeaderHovered]         = ImVec4(0.95f, 0.78f, 0.25f, 0.30f);
+style.Colors[ImGuiCol_HeaderActive]          = ImVec4(0.95f, 0.78f, 0.25f, 0.55f);
+style.Colors[ImGuiCol_Separator]             = ImVec4(0.24f, 0.26f, 0.32f, 0.60f);
+style.Colors[ImGuiCol_SeparatorHovered]      = ImVec4(0.95f, 0.78f, 0.25f, 0.60f);
+style.Colors[ImGuiCol_SeparatorActive]       = ImVec4(1.00f, 0.84f, 0.25f, 1.00f);
+style.Colors[ImGuiCol_ResizeGrip]            = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+style.Colors[ImGuiCol_ResizeGripHovered]     = ImVec4(0.95f, 0.78f, 0.25f, 0.40f);
+style.Colors[ImGuiCol_ResizeGripActive]      = ImVec4(1.00f, 0.84f, 0.25f, 0.80f);
+style.Colors[ImGuiCol_Tab]                   = ImVec4(0.12f, 0.13f, 0.17f, 0.80f);
+style.Colors[ImGuiCol_TabHovered]            = ImVec4(0.95f, 0.78f, 0.25f, 0.40f);
+style.Colors[ImGuiCol_TabActive]             = ImVec4(0.20f, 0.18f, 0.10f, 1.00f);
+style.Colors[ImGuiCol_PlotLines]             = ImVec4(1.00f, 0.84f, 0.25f, 1.00f);
+style.Colors[ImGuiCol_PlotLinesHovered]      = ImVec4(1.00f, 0.90f, 0.40f, 1.00f);
+style.Colors[ImGuiCol_PlotHistogram]         = ImVec4(0.95f, 0.78f, 0.25f, 1.00f);
+style.Colors[ImGuiCol_PlotHistogramHovered]  = ImVec4(1.00f, 0.88f, 0.35f, 1.00f);
+style.Colors[ImGuiCol_TableHeaderBg]         = ImVec4(0.13f, 0.14f, 0.18f, 1.00f);
+style.Colors[ImGuiCol_TableBorderStrong]     = ImVec4(0.24f, 0.26f, 0.32f, 0.60f);
+style.Colors[ImGuiCol_TableBorderLight]      = ImVec4(0.18f, 0.20f, 0.25f, 0.40f);
+style.Colors[ImGuiCol_TableRowBg]            = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+style.Colors[ImGuiCol_TableRowBgAlt]         = ImVec4(1.00f, 1.00f, 1.00f, 0.03f);
+style.Colors[ImGuiCol_TextSelectedBg]        = ImVec4(0.95f, 0.78f, 0.25f, 0.35f);
+style.Colors[ImGuiCol_DragDropTarget]        = ImVec4(1.00f, 0.84f, 0.25f, 1.00f);
+style.Colors[ImGuiCol_NavHighlight]          = ImVec4(0.95f, 0.78f, 0.25f, 1.00f);
+style.Colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 0.84f, 0.25f, 1.00f);
+style.Colors[ImGuiCol_NavWindowingDimBg]     = ImVec4(0.00f, 0.00f, 0.00f, 0.60f);
+style.Colors[ImGuiCol_ModalWindowDimBg]      = ImVec4(0.00f, 0.00f, 0.00f, 0.60f);
 
 // ==================== کۆتایی ستایل ====================
 ImFontConfig font_cfg;
@@ -17292,7 +17262,11 @@ ImGui::SetNextWindowPos(
 );
 
 ImGui::SetNextWindowSize(winSz, ImGuiCond_FirstUseEver);
-ImGui::GetStyle().WindowRounding = 3.5; 
+ImGui::GetStyle().WindowRounding = 14.0f; 
+ImGui::GetStyle().ChildRounding = 10.0f;
+ImGui::GetStyle().FrameRounding = 7.0f;
+ImGui::GetStyle().WindowBorderSize = 1.2f;
+ImGui::GetStyle().ChildBorderSize = 0.8f;
 
 /*if (!_x0x626)
 {
@@ -17367,6 +17341,21 @@ ImGui::BeginChild("TabBar", ImVec2(sidebarWidth, 0), true,
         if (ImGui::IsItemClicked())
             Settings::Tab = i;
 
+        if (selected) {
+            draw->AddRectFilled(
+                cursor,
+                ImVec2(cursor.x + buttonWidth, cursor.y + buttonHeight),
+                ImColor(0.95f, 0.78f, 0.25f, 0.16f),
+                8.0f
+            );
+            draw->AddRectFilled(
+                cursor,
+                ImVec2(cursor.x + 3.5f, cursor.y + buttonHeight),
+                ImColor(1.0f, 0.84f, 0.25f, 1.0f),
+                2.0f
+            );
+        }
+
         ImVec2 center(
             cursor.x + buttonWidth * 0.5f,
             cursor.y + buttonHeight * 0.5f
@@ -17377,27 +17366,26 @@ ImGui::BeginChild("TabBar", ImVec2(sidebarWidth, 0), true,
         float textX = center.x + animText[i] * 8.0f;
         float baselineY = center.y - iconSize * 0.5f;
 
+        ImColor iconCol = selected ? ImColor(1.0f, 0.84f, 0.25f, 1.0f) : ImColor(0.60f, 0.65f, 0.75f, animAlpha[i]);
         draw->AddText(
             ImGui::GetFont(),
             iconSize,
             ImVec2(iconX - iconSize * 0.5f, baselineY),
-            ImColor(1.0f, 1.0f, 1.0f, animAlpha[i]),
+            iconCol,
             icons[i]
         );
 
         if (animText[i] > 0.01f)
         {
-
-float textSize = 14.0f;  
-
-draw->AddText(
-    ImGui::GetFont(),
-    textSize,
-    ImVec2(textX, baselineY + 4.0f),
-    ImColor(1.0f, 1.0f, 1.0f, animText[i]),
-    names[i]
-);
-            
+            float textSize = 14.0f;  
+            ImColor textCol = selected ? ImColor(1.0f, 0.84f, 0.25f, 1.0f) : ImColor(0.95f, 0.96f, 0.98f, animText[i]);
+            draw->AddText(
+                ImGui::GetFont(),
+                textSize,
+                ImVec2(textX, baselineY + 4.0f),
+                textCol,
+                names[i]
+            );
         }
     }
 }}
@@ -17408,7 +17396,7 @@ ImGui::EndChild();
 
 
         
-ImGui::BeginChild("TabContent", ImVec2(0, 0), true);
+ImGui::BeginChild("TabContent", ImVec2(0, 0), false);
 
 if (Settings::Tab == 0) 
 {
@@ -17420,9 +17408,9 @@ if (Settings::Tab == 0)
 
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoScrollbar;
 
-    ImGui::BeginChild("##main", ImVec2(900, 350), true, flags);
+    ImGui::BeginChild("##main", ImVec2(900, 350), false, flags);
 
-    ImGui::BeginChild("###1", ImVec2(125, 400), true, flags);
+    ImGui::BeginChild("###1", ImVec2(130, 400), true, flags);
 
     ImGui::Checkbox("ESP", &imgui::ESP);
     configManager::putBoolean(config, "ESP", "ESP", imgui::ESP);
