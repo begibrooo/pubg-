@@ -1,11 +1,18 @@
 #import <UIKit/UIKit.h>
 #import <Foundation/Foundation.h>
+#import <QuartzCore/QuartzCore.h>
 
 @interface DRDEVViewController : UIViewController <UITextFieldDelegate>
-@property (nonatomic, strong) UITextField *passwordField;
-@property (nonatomic, strong) UILabel *messageLabel;
+@property (nonatomic, strong) UIVisualEffectView *blurEffectView;
 @property (nonatomic, strong) UIView *containerView;
-@property (nonatomic, strong) UIButton *okButton;
+@property (nonatomic, strong) UILabel *titleLabel;
+@property (nonatomic, strong) UILabel *subtitleLabel;
+@property (nonatomic, strong) UITextField *passwordField;
+@property (nonatomic, strong) UIButton *eyeButton;
+@property (nonatomic, strong) UIButton *loginButton;
+@property (nonatomic, strong) CAGradientLayer *buttonGradient;
+@property (nonatomic, strong) UILabel *messageLabel;
+@property (nonatomic, strong) UILabel *footerLabel;
 @property (nonatomic, strong) NSLayoutConstraint *centerYConstraint;
 @end
 
@@ -14,129 +21,211 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    self.view.backgroundColor = [UIColor colorWithWhite:0 alpha:0.85];
+    // Background Dark Blur
+    self.view.backgroundColor = [UIColor colorWithWhite:0 alpha:0.65];
+    UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleDark];
+    self.blurEffectView = [[UIVisualEffectView alloc] initWithEffect:blurEffect];
+    self.blurEffectView.frame = self.view.bounds;
+    self.blurEffectView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    [self.view addSubview:self.blurEffectView];
     
-    // Container View
+    // Container View (Card)
     self.containerView = [[UIView alloc] init];
-    self.containerView.backgroundColor = [UIColor colorWithWhite:0.10 alpha:1.0];
-    self.containerView.layer.cornerRadius = 16;
-    self.containerView.layer.masksToBounds = YES;
-    self.containerView.layer.borderWidth = 0.5;
-    self.containerView.layer.borderColor = [UIColor colorWithWhite:0.3 alpha:1.0].CGColor;
+    self.containerView.backgroundColor = [UIColor colorWithRed:0.09 green:0.10 blue:0.13 alpha:0.96];
+    self.containerView.layer.cornerRadius = 24;
+    self.containerView.layer.borderWidth = 1.2;
+    self.containerView.layer.borderColor = [UIColor colorWithRed:0.95 green:0.78 blue:0.25 alpha:0.75].CGColor;
+    self.containerView.layer.shadowColor = [UIColor colorWithRed:1.0 green:0.80 blue:0.20 alpha:0.35].CGColor;
+    self.containerView.layer.shadowOffset = CGSizeMake(0, 10);
+    self.containerView.layer.shadowRadius = 25;
+    self.containerView.layer.shadowOpacity = 1.0;
     self.containerView.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:self.containerView];
     
-    // Top Banner - Gradient
-    CAGradientLayer *gradient = [CAGradientLayer layer];
-    gradient.colors = @[(id)[UIColor colorWithRed:1.0 green:0.84 blue:0.0 alpha:1.0].CGColor, (id)[UIColor colorWithRed:0.9 green:0.7 blue:0.0 alpha:1.0].CGColor];
-    gradient.startPoint = CGPointMake(0, 0);
-    gradient.endPoint = CGPointMake(1, 0);
-    
+    // Header Banner View
     UIView *bannerView = [[UIView alloc] init];
-    [bannerView.layer addSublayer:gradient];
+    bannerView.backgroundColor = [UIColor clearColor];
     bannerView.translatesAutoresizingMaskIntoConstraints = NO;
     [self.containerView addSubview:bannerView];
     
-    // Title in Banner
-    UILabel *titleLabel = [[UILabel alloc] init];
-    titleLabel.text = @"DRDEV - VNxG4NG";
-    titleLabel.font = [UIFont systemFontOfSize:18 weight:UIFontWeightHeavy];
-    titleLabel.textColor = [UIColor blackColor];
-    titleLabel.textAlignment = NSTextAlignmentCenter;
-    titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
-    [bannerView addSubview:titleLabel];
+    // Crown Icon Badge
+    UILabel *crownLabel = [[UILabel alloc] init];
+    crownLabel.text = @"👑";
+    crownLabel.font = [UIFont systemFontOfSize:34];
+    crownLabel.textAlignment = NSTextAlignmentCenter;
+    crownLabel.translatesAutoresizingMaskIntoConstraints = NO;
+    [bannerView addSubview:crownLabel];
     
-    // Subtitle
-    UILabel *subtitleLabel = [[UILabel alloc] init];
-    subtitleLabel.text = @"Enter password to continue";
-    subtitleLabel.font = [UIFont systemFontOfSize:13 weight:UIFontWeightMedium];
-    subtitleLabel.textColor = [UIColor colorWithWhite:0.75 alpha:1.0];
-    subtitleLabel.textAlignment = NSTextAlignmentCenter;
-    subtitleLabel.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.containerView addSubview:subtitleLabel];
+    // Title Label
+    self.titleLabel = [[UILabel alloc] init];
+    self.titleLabel.text = @"RAKHIMOV VIP";
+    self.titleLabel.font = [UIFont systemFontOfSize:22 weight:UIFontWeightBlack];
+    self.titleLabel.textColor = [UIColor colorWithRed:1.0 green:0.84 blue:0.25 alpha:1.0];
+    self.titleLabel.textAlignment = NSTextAlignmentCenter;
+    self.titleLabel.layer.shadowColor = [UIColor colorWithRed:1.0 green:0.84 blue:0.25 alpha:0.5].CGColor;
+    self.titleLabel.layer.shadowOffset = CGSizeMake(0, 2);
+    self.titleLabel.layer.shadowRadius = 8;
+    self.titleLabel.layer.shadowOpacity = 1.0;
+    self.titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
+    [bannerView addSubview:self.titleLabel];
     
-    // OK Button
-    self.okButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    [self.okButton setTitle:@"OK" forState:UIControlStateNormal];
-    [self.okButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-    self.okButton.titleLabel.font = [UIFont systemFontOfSize:17 weight:UIFontWeightSemibold];
-    self.okButton.backgroundColor = [UIColor colorWithRed:1.0 green:0.84 blue:0.0 alpha:1.0];
-    self.okButton.layer.cornerRadius = 12;
-    self.okButton.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.okButton addTarget:self action:@selector(verifyPassword) forControlEvents:UIControlEventTouchUpInside];
-    [self.containerView addSubview:self.okButton];
+    // Subtitle Label
+    self.subtitleLabel = [[UILabel alloc] init];
+    self.subtitleLabel.text = @"AUTHENTICATION REQUIRED";
+    self.subtitleLabel.font = [UIFont systemFontOfSize:11 weight:UIFontWeightBold];
+    self.subtitleLabel.textColor = [UIColor colorWithWhite:0.65 alpha:1.0];
+    self.subtitleLabel.textAlignment = NSTextAlignmentCenter;
+    self.subtitleLabel.translatesAutoresizingMaskIntoConstraints = NO;
+    [bannerView addSubview:self.subtitleLabel];
+    
+    // Password Field Container
+    UIView *fieldWrapper = [[UIView alloc] init];
+    fieldWrapper.backgroundColor = [UIColor colorWithRed:0.13 green:0.14 blue:0.18 alpha:1.0];
+    fieldWrapper.layer.cornerRadius = 14;
+    fieldWrapper.layer.borderWidth = 1.0;
+    fieldWrapper.layer.borderColor = [UIColor colorWithWhite:0.28 alpha:1.0].CGColor;
+    fieldWrapper.translatesAutoresizingMaskIntoConstraints = NO;
+    [self.containerView addSubview:fieldWrapper];
+    
+    // Key Icon (Left of Field)
+    UILabel *keyIcon = [[UILabel alloc] initWithFrame:CGRectMake(14, 14, 22, 22)];
+    keyIcon.text = @"🔑";
+    keyIcon.font = [UIFont systemFontOfSize:15];
+    [fieldWrapper addSubview:keyIcon];
+    
+    // Eye Toggle Button (Right of Field)
+    self.eyeButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    self.eyeButton.frame = CGRectMake(0, 0, 42, 50);
+    [self.eyeButton setTitle:@"👁" forState:UIControlStateNormal];
+    self.eyeButton.titleLabel.font = [UIFont systemFontOfSize:16];
+    [self.eyeButton addTarget:self action:@selector(togglePasswordVisibility) forControlEvents:UIControlEventTouchUpInside];
     
     // Password Field
     self.passwordField = [[UITextField alloc] init];
-    self.passwordField.placeholder = @"Password";
+    self.passwordField.placeholder = @"Enter VIP Password...";
+    self.passwordField.attributedPlaceholder = [[NSAttributedString alloc] initWithString:@"Enter VIP Password..." attributes:@{
+        NSForegroundColorAttributeName: [UIColor colorWithWhite:0.45 alpha:1.0],
+        NSFontAttributeName: [UIFont systemFontOfSize:15 weight:UIFontWeightRegular]
+    }];
     self.passwordField.secureTextEntry = YES;
     self.passwordField.borderStyle = UITextBorderStyleNone;
-    self.passwordField.backgroundColor = [UIColor colorWithWhite:0.18 alpha:1.0];
+    self.passwordField.backgroundColor = [UIColor clearColor];
     self.passwordField.textColor = [UIColor whiteColor];
-    self.passwordField.font = [UIFont systemFontOfSize:16 weight:UIFontWeightRegular];
-    self.passwordField.layer.cornerRadius = 12;
-    self.passwordField.layer.masksToBounds = YES;
-    self.passwordField.layer.borderWidth = 0.5;
-    self.passwordField.layer.borderColor = [UIColor colorWithWhite:0.35 alpha:1.0].CGColor;
+    self.passwordField.font = [UIFont systemFontOfSize:15 weight:UIFontWeightMedium];
+    self.passwordField.returnKeyType = UIReturnKeyDone;
+    self.passwordField.autocapitalizationType = UITextAutocapitalizationTypeNone;
+    self.passwordField.autocorrectionType = UITextAutocorrectionTypeNo;
+    self.passwordField.rightView = self.eyeButton;
+    self.passwordField.rightViewMode = UITextFieldViewModeAlways;
     self.passwordField.delegate = self;
-    
-    UIView *leftPadding = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 14, 0)];
-    self.passwordField.leftView = leftPadding;
-    self.passwordField.leftViewMode = UITextFieldViewModeAlways;
     self.passwordField.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.containerView addSubview:self.passwordField];
+    [fieldWrapper addSubview:self.passwordField];
     
-    // Message Label
+    // Login Button
+    self.loginButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    self.loginButton.layer.cornerRadius = 14;
+    self.loginButton.layer.masksToBounds = YES;
+    [self.loginButton setTitle:@"⚡ UNLOCK VIP" forState:UIControlStateNormal];
+    [self.loginButton setTitleColor:[UIColor colorWithRed:0.08 green:0.08 blue:0.10 alpha:1.0] forState:UIControlStateNormal];
+    self.loginButton.titleLabel.font = [UIFont systemFontOfSize:16 weight:UIFontWeightBlack];
+    self.loginButton.translatesAutoresizingMaskIntoConstraints = NO;
+    [self.loginButton addTarget:self action:@selector(verifyPassword) forControlEvents:UIControlEventTouchUpInside];
+    [self.containerView addSubview:self.loginButton];
+    
+    // Button Gradient
+    self.buttonGradient = [CAGradientLayer layer];
+    self.buttonGradient.colors = @[
+        (id)[UIColor colorWithRed:1.0 green:0.86 blue:0.30 alpha:1.0].CGColor,
+        (id)[UIColor colorWithRed:0.92 green:0.68 blue:0.12 alpha:1.0].CGColor
+    ];
+    self.buttonGradient.startPoint = CGPointMake(0, 0);
+    self.buttonGradient.endPoint = CGPointMake(1, 0);
+    [self.loginButton.layer insertSublayer:self.buttonGradient atIndex:0];
+    
+    // Message Label (Error feedback)
     self.messageLabel = [[UILabel alloc] init];
-    self.messageLabel.font = [UIFont systemFontOfSize:12 weight:UIFontWeightMedium];
-    self.messageLabel.textColor = [UIColor systemRedColor];
+    self.messageLabel.font = [UIFont systemFontOfSize:13 weight:UIFontWeightBold];
+    self.messageLabel.textColor = [UIColor colorWithRed:1.0 green:0.35 blue:0.35 alpha:1.0];
     self.messageLabel.textAlignment = NSTextAlignmentCenter;
-    self.messageLabel.numberOfLines = 0;
+    self.messageLabel.numberOfLines = 1;
     self.messageLabel.translatesAutoresizingMaskIntoConstraints = NO;
     [self.containerView addSubview:self.messageLabel];
     
-    // Center Y constraint for moving view up when keyboard appears
-    self.centerYConstraint = [self.containerView.centerYAnchor constraintEqualToAnchor:self.view.centerYAnchor constant:-40];
+    // Footer Label
+    self.footerLabel = [[UILabel alloc] init];
+    self.footerLabel.text = @"Telegram: @xxwhe";
+    self.footerLabel.font = [UIFont systemFontOfSize:12 weight:UIFontWeightSemibold];
+    self.footerLabel.textColor = [UIColor colorWithRed:0.95 green:0.78 blue:0.25 alpha:0.85];
+    self.footerLabel.textAlignment = NSTextAlignmentCenter;
+    self.footerLabel.translatesAutoresizingMaskIntoConstraints = NO;
+    [self.containerView addSubview:self.footerLabel];
+    
+    // Keyboard Center Constraint
+    self.centerYConstraint = [self.containerView.centerYAnchor constraintEqualToAnchor:self.view.centerYAnchor];
     
     [NSLayoutConstraint activateConstraints:@[
+        // Container
         [self.containerView.centerXAnchor constraintEqualToAnchor:self.view.centerXAnchor],
         self.centerYConstraint,
-        [self.containerView.widthAnchor constraintEqualToConstant:290],
+        [self.containerView.widthAnchor constraintEqualToConstant:320],
         
-        [bannerView.topAnchor constraintEqualToAnchor:self.containerView.topAnchor],
-        [bannerView.leadingAnchor constraintEqualToAnchor:self.containerView.leadingAnchor],
-        [bannerView.trailingAnchor constraintEqualToAnchor:self.containerView.trailingAnchor],
-        [bannerView.heightAnchor constraintEqualToConstant:52],
+        // Banner
+        [bannerView.topAnchor constraintEqualToAnchor:self.containerView.topAnchor constant:22],
+        [bannerView.leadingAnchor constraintEqualToAnchor:self.containerView.leadingAnchor constant:16],
+        [bannerView.trailingAnchor constraintEqualToAnchor:self.containerView.trailingAnchor constant:-16],
         
-        [titleLabel.centerXAnchor constraintEqualToAnchor:bannerView.centerXAnchor],
-        [titleLabel.centerYAnchor constraintEqualToAnchor:bannerView.centerYAnchor],
+        // Crown
+        [crownLabel.topAnchor constraintEqualToAnchor:bannerView.topAnchor],
+        [crownLabel.centerXAnchor constraintEqualToAnchor:bannerView.centerXAnchor],
         
-        [subtitleLabel.topAnchor constraintEqualToAnchor:bannerView.bottomAnchor constant:16],
-        [subtitleLabel.leadingAnchor constraintEqualToAnchor:self.containerView.leadingAnchor constant:20],
-        [subtitleLabel.trailingAnchor constraintEqualToAnchor:self.containerView.trailingAnchor constant:-20],
+        // Title
+        [self.titleLabel.topAnchor constraintEqualToAnchor:crownLabel.bottomAnchor constant:4],
+        [self.titleLabel.centerXAnchor constraintEqualToAnchor:bannerView.centerXAnchor],
         
-        [self.okButton.topAnchor constraintEqualToAnchor:subtitleLabel.bottomAnchor constant:20],
-        [self.okButton.leadingAnchor constraintEqualToAnchor:self.containerView.leadingAnchor constant:18],
-        [self.okButton.trailingAnchor constraintEqualToAnchor:self.containerView.trailingAnchor constant:-18],
-        [self.okButton.heightAnchor constraintEqualToConstant:48],
+        // Subtitle
+        [self.subtitleLabel.topAnchor constraintEqualToAnchor:self.titleLabel.bottomAnchor constant:4],
+        [self.subtitleLabel.centerXAnchor constraintEqualToAnchor:bannerView.centerXAnchor],
+        [self.subtitleLabel.bottomAnchor constraintEqualToAnchor:bannerView.bottomAnchor],
         
-        [self.passwordField.topAnchor constraintEqualToAnchor:self.okButton.bottomAnchor constant:12],
-        [self.passwordField.leadingAnchor constraintEqualToAnchor:self.containerView.leadingAnchor constant:18],
-        [self.passwordField.trailingAnchor constraintEqualToAnchor:self.containerView.trailingAnchor constant:-18],
-        [self.passwordField.heightAnchor constraintEqualToConstant:48],
+        // Field Wrapper
+        [fieldWrapper.topAnchor constraintEqualToAnchor:bannerView.bottomAnchor constant:20],
+        [fieldWrapper.leadingAnchor constraintEqualToAnchor:self.containerView.leadingAnchor constant:20],
+        [fieldWrapper.trailingAnchor constraintEqualToAnchor:self.containerView.trailingAnchor constant:-20],
+        [fieldWrapper.heightAnchor constraintEqualToConstant:50],
         
-        [self.messageLabel.topAnchor constraintEqualToAnchor:self.passwordField.bottomAnchor constant:10],
-        [self.messageLabel.leadingAnchor constraintEqualToAnchor:self.containerView.leadingAnchor constant:18],
-        [self.messageLabel.trailingAnchor constraintEqualToAnchor:self.containerView.trailingAnchor constant:-18],
-        [self.messageLabel.bottomAnchor constraintEqualToAnchor:self.containerView.bottomAnchor constant:-20],
+        // Password Field inside Wrapper
+        [self.passwordField.leadingAnchor constraintEqualToAnchor:fieldWrapper.leadingAnchor constant:42],
+        [self.passwordField.trailingAnchor constraintEqualToAnchor:fieldWrapper.trailingAnchor constant:-8],
+        [self.passwordField.topAnchor constraintEqualToAnchor:fieldWrapper.topAnchor],
+        [self.passwordField.bottomAnchor constraintEqualToAnchor:fieldWrapper.bottomAnchor],
+        
+        // Message Label
+        [self.messageLabel.topAnchor constraintEqualToAnchor:fieldWrapper.bottomAnchor constant:8],
+        [self.messageLabel.leadingAnchor constraintEqualToAnchor:self.containerView.leadingAnchor constant:20],
+        [self.messageLabel.trailingAnchor constraintEqualToAnchor:self.containerView.trailingAnchor constant:-20],
+        [self.messageLabel.heightAnchor constraintEqualToConstant:18],
+        
+        // Login Button
+        [self.loginButton.topAnchor constraintEqualToAnchor:self.messageLabel.bottomAnchor constant:6],
+        [self.loginButton.leadingAnchor constraintEqualToAnchor:self.containerView.leadingAnchor constant:20],
+        [self.loginButton.trailingAnchor constraintEqualToAnchor:self.containerView.trailingAnchor constant:-20],
+        [self.loginButton.heightAnchor constraintEqualToConstant:48],
+        
+        // Footer Label
+        [self.footerLabel.topAnchor constraintEqualToAnchor:self.loginButton.bottomAnchor constant:14],
+        [self.footerLabel.centerXAnchor constraintEqualToAnchor:self.containerView.centerXAnchor],
+        [self.footerLabel.bottomAnchor constraintEqualToAnchor:self.containerView.bottomAnchor constant:-18],
     ]];
     
-    // Update gradient frame after layout
-    dispatch_async(dispatch_get_main_queue(), ^{
-        gradient.frame = bannerView.bounds;
-    });
+    // Animate container entry
+    self.containerView.transform = CGAffineTransformMakeScale(0.85, 0.85);
+    self.containerView.alpha = 0;
+    [UIView animateWithDuration:0.3 delay:0.05 usingSpringWithDamping:0.75 initialSpringVelocity:0.6 options:0 animations:^{
+        self.containerView.transform = CGAffineTransformIdentity;
+        self.containerView.alpha = 1;
+    } completion:nil];
     
-    // Register for keyboard notifications
+    // Keyboard Listeners
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(keyboardWillShow:)
                                                  name:UIKeyboardWillShowNotification
@@ -150,15 +239,24 @@
     [self.passwordField becomeFirstResponder];
 }
 
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    self.buttonGradient.frame = self.loginButton.bounds;
+}
+
+- (void)togglePasswordVisibility {
+    self.passwordField.secureTextEntry = !self.passwordField.secureTextEntry;
+    [self.eyeButton setTitle:self.passwordField.secureTextEntry ? @"👁" : @"🔒" forState:UIControlStateNormal];
+}
+
 - (void)keyboardWillShow:(NSNotification *)notification {
     NSDictionary *userInfo = notification.userInfo;
     CGRect keyboardFrame = [userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
     CGFloat keyboardHeight = keyboardFrame.size.height;
     NSTimeInterval duration = [userInfo[UIKeyboardAnimationDurationUserInfoKey] doubleValue];
     
-    // Move container view above keyboard
-    CGFloat moveUp = keyboardHeight - 100;
-    self.centerYConstraint.constant = -moveUp;
+    CGFloat offset = -(keyboardHeight / 2.0);
+    self.centerYConstraint.constant = offset;
     
     [UIView animateWithDuration:duration animations:^{
         [self.view layoutIfNeeded];
@@ -169,8 +267,7 @@
     NSDictionary *userInfo = notification.userInfo;
     NSTimeInterval duration = [userInfo[UIKeyboardAnimationDurationUserInfoKey] doubleValue];
     
-    // Move container view back to center
-    self.centerYConstraint.constant = -40;
+    self.centerYConstraint.constant = 0;
     
     [UIView animateWithDuration:duration animations:^{
         [self.view layoutIfNeeded];
@@ -183,102 +280,123 @@
 }
 
 - (void)verifyPassword {
-    NSString *enteredPassword = self.passwordField.text;
-    // Base64 of "DRDEV-VNxG4NG" is "RFJERVYtVk54RzRORw=="
-    NSString *correctBase64 = @"RFJERVYtVk54RzRORw==";
-    NSString *encodedInput = [self toBase64:enteredPassword];
+    NSString *rawInput = self.passwordField.text ?: @"";
+    NSString *cleanInput = [rawInput stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     
-    if (!enteredPassword || enteredPassword.length == 0) {
-        self.messageLabel.text = @"Please enter password";
+    // Target password: "@xxwhe" -> Base64: "QHh4d2hl"
+    NSString *correctBase64 = @"QHh4d2hl";
+    NSString *encodedInput = [self toBase64:cleanInput];
+    
+    if (cleanInput.length == 0) {
+        self.messageLabel.text = @"⚠️ Please enter your VIP password";
         [self shakeView];
         return;
     }
     
-    if ([encodedInput isEqualToString:correctBase64]) {
+    if ([cleanInput isEqualToString:@"@xxwhe"] || [encodedInput isEqualToString:correctBase64]) {
+        self.messageLabel.textColor = [UIColor colorWithRed:0.35 green:1.0 blue:0.45 alpha:1.0];
+        self.messageLabel.text = @"✓ Access Granted";
         [self showActivated];
     } else {
-        self.messageLabel.text = @"Incorrect password";
+        self.messageLabel.textColor = [UIColor colorWithRed:1.0 green:0.35 blue:0.35 alpha:1.0];
+        self.messageLabel.text = @"❌ Incorrect password, try again!";
         self.passwordField.text = @"";
         [self shakeView];
     }
 }
 
 - (void)showActivated {
-    [self dismissSelf];
+    [self.passwordField resignFirstResponder];
     
     UIViewController *activatedVC = [[UIViewController alloc] init];
-    activatedVC.view.backgroundColor = [UIColor colorWithWhite:0 alpha:0.95];
+    activatedVC.view.backgroundColor = [UIColor colorWithWhite:0 alpha:0.75];
     activatedVC.modalPresentationStyle = UIModalPresentationOverFullScreen;
     
     UIView *popup = [[UIView alloc] init];
-    popup.backgroundColor = [UIColor colorWithWhite:0.12 alpha:1.0];
+    popup.backgroundColor = [UIColor colorWithRed:0.09 green:0.10 blue:0.13 alpha:0.98];
     popup.layer.cornerRadius = 24;
     popup.layer.borderWidth = 1.5;
-    popup.layer.borderColor = [UIColor colorWithRed:1.0 green:0.84 blue:0.0 alpha:1.0].CGColor;
+    popup.layer.borderColor = [UIColor colorWithRed:1.0 green:0.84 blue:0.25 alpha:1.0].CGColor;
+    popup.layer.shadowColor = [UIColor colorWithRed:1.0 green:0.84 blue:0.25 alpha:0.45].CGColor;
+    popup.layer.shadowOffset = CGSizeMake(0, 8);
+    popup.layer.shadowRadius = 20;
+    popup.layer.shadowOpacity = 1.0;
     popup.translatesAutoresizingMaskIntoConstraints = NO;
     [activatedVC.view addSubview:popup];
     
-    UILabel *checkmark = [[UILabel alloc] init];
-    checkmark.text = @"✓";
-    checkmark.font = [UIFont systemFontOfSize:52 weight:UIFontWeightThin];
-    checkmark.textColor = [UIColor colorWithRed:1.0 green:0.84 blue:0.0 alpha:1.0];
-    checkmark.textAlignment = NSTextAlignmentCenter;
-    checkmark.translatesAutoresizingMaskIntoConstraints = NO;
-    [popup addSubview:checkmark];
+    UILabel *crown = [[UILabel alloc] init];
+    crown.text = @"👑";
+    crown.font = [UIFont systemFontOfSize:42];
+    crown.textAlignment = NSTextAlignmentCenter;
+    crown.translatesAutoresizingMaskIntoConstraints = NO;
+    [popup addSubview:crown];
     
-    UILabel *label = [[UILabel alloc] init];
-    label.text = @"ACTIVATED";
-    label.font = [UIFont systemFontOfSize:26 weight:UIFontWeightBold];
-    label.textColor = [UIColor colorWithRed:1.0 green:0.84 blue:0.0 alpha:1.0];
-    label.textAlignment = NSTextAlignmentCenter;
-    label.translatesAutoresizingMaskIntoConstraints = NO;
-    [popup addSubview:label];
+    UILabel *title = [[UILabel alloc] init];
+    title.text = @"RAKHIMOV VIP";
+    title.font = [UIFont systemFontOfSize:22 weight:UIFontWeightBlack];
+    title.textColor = [UIColor colorWithRed:1.0 green:0.84 blue:0.25 alpha:1.0];
+    title.textAlignment = NSTextAlignmentCenter;
+    title.translatesAutoresizingMaskIntoConstraints = NO;
+    [popup addSubview:title];
+    
+    UILabel *status = [[UILabel alloc] init];
+    status.text = @"✓ ACCESS GRANTED";
+    status.font = [UIFont systemFontOfSize:14 weight:UIFontWeightBold];
+    status.textColor = [UIColor colorWithRed:0.35 green:1.0 blue:0.45 alpha:1.0];
+    status.textAlignment = NSTextAlignmentCenter;
+    status.translatesAutoresizingMaskIntoConstraints = NO;
+    [popup addSubview:status];
     
     [NSLayoutConstraint activateConstraints:@[
         [popup.centerXAnchor constraintEqualToAnchor:activatedVC.view.centerXAnchor],
         [popup.centerYAnchor constraintEqualToAnchor:activatedVC.view.centerYAnchor],
-        [popup.widthAnchor constraintEqualToConstant:220],
-        [popup.heightAnchor constraintEqualToConstant:130],
+        [popup.widthAnchor constraintEqualToConstant:260],
+        [popup.heightAnchor constraintEqualToConstant:180],
         
-        [checkmark.topAnchor constraintEqualToAnchor:popup.topAnchor constant:20],
-        [checkmark.centerXAnchor constraintEqualToAnchor:popup.centerXAnchor],
+        [crown.topAnchor constraintEqualToAnchor:popup.topAnchor constant:22],
+        [crown.centerXAnchor constraintEqualToAnchor:popup.centerXAnchor],
         
-        [label.topAnchor constraintEqualToAnchor:checkmark.bottomAnchor constant:8],
-        [label.centerXAnchor constraintEqualToAnchor:popup.centerXAnchor],
-        [label.bottomAnchor constraintEqualToAnchor:popup.bottomAnchor constant:-20],
+        [title.topAnchor constraintEqualToAnchor:crown.bottomAnchor constant:8],
+        [title.centerXAnchor constraintEqualToAnchor:popup.centerXAnchor],
+        
+        [status.topAnchor constraintEqualToAnchor:title.bottomAnchor constant:8],
+        [status.centerXAnchor constraintEqualToAnchor:popup.centerXAnchor],
+        [status.bottomAnchor constraintEqualToAnchor:popup.bottomAnchor constant:-22]
     ]];
     
     popup.transform = CGAffineTransformMakeScale(0.6, 0.6);
     popup.alpha = 0;
     
     UIViewController *topVC = [self getTopViewController];
-    [topVC presentViewController:activatedVC animated:NO completion:^{
-        [UIView animateWithDuration:0.35 delay:0 usingSpringWithDamping:0.7 initialSpringVelocity:0.5 options:0 animations:^{
-            popup.transform = CGAffineTransformIdentity;
-            popup.alpha = 1;
-        } completion:nil];
+    [self dismissViewControllerAnimated:NO completion:^{
+        [topVC presentViewController:activatedVC animated:NO completion:^{
+            [UIView animateWithDuration:0.35 delay:0 usingSpringWithDamping:0.75 initialSpringVelocity:0.5 options:0 animations:^{
+                popup.transform = CGAffineTransformIdentity;
+                popup.alpha = 1;
+            } completion:nil];
+        }];
     }];
     
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-        [activatedVC dismissViewControllerAnimated:YES completion:nil];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [UIView animateWithDuration:0.25 animations:^{
+            popup.alpha = 0;
+            popup.transform = CGAffineTransformMakeScale(0.85, 0.85);
+        } completion:^(BOOL finished) {
+            [activatedVC dismissViewControllerAnimated:NO completion:nil];
+        }];
     });
-}
-
-- (void)dismissSelf {
-    [self.passwordField resignFirstResponder];
-    [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 - (void)shakeView {
     CABasicAnimation *shake = [CABasicAnimation animationWithKeyPath:@"transform.translation.x"];
-    shake.duration = 0.08;
+    shake.duration = 0.07;
     shake.repeatCount = 3;
     shake.autoreverses = YES;
-    shake.fromValue = @(-6);
-    shake.toValue = @(6);
+    shake.fromValue = @(-8);
+    shake.toValue = @(8);
     [self.containerView.layer addAnimation:shake forKey:@"shake"];
     
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2.5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
         self.messageLabel.text = @"";
     });
 }
