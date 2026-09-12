@@ -1138,9 +1138,9 @@ ImVec4 to_vec4(float r, float g, float b, float a)
 FVector GetBoneByName(ASTExtraPlayerCharacter *Actor, const struct FName BoneName) {
     return Actor->GetBonePos(BoneName, FVector());
 }
-static auto start = std::chrono::steady_clock::now();
-static auto noww = std::chrono::high_resolution_clock::now();
-auto elapsedd = std::chrono::duration_cast<std::chrono::milliseconds>(noww - start).count();
+// static auto start = std::chrono::steady_clock::now();
+// static auto noww = std::chrono::high_resolution_clock::now();
+// auto elapsedd = std::chrono::duration_cast<std::chrono::milliseconds>(noww - start).count();
 namespace Settings
 {
     static int Tab = 0;
@@ -10320,9 +10320,11 @@ std::vector<AActor *> getActors() {
 }
 
 template <class T> void GetAllActors(std::vector<T*>& Actors) {
-    UGameplayStatics* pGameplayStatics = (UGameplayStatics*)UGameplayStatics::StaticClass();
+    if (!UObject::GUObjectArray) return;
     auto GWorld = GetFullWorld();
-    if (GWorld && pGameplayStatics) {
+    if (!GWorld) return;
+    UGameplayStatics* pGameplayStatics = (UGameplayStatics*)UGameplayStatics::StaticClass();
+    if (pGameplayStatics) {
         TArray<AActor*> Actors2;
         pGameplayStatics->GetAllActorsOfClass((UObject*)GWorld, T::StaticClass(), &Actors2);
         if (Actors2.Data && Actors2.Count > 0 && Actors2.Count <= 4096) {
@@ -10428,9 +10430,15 @@ ASTExtraPlayerController *g_PlayerController = nullptr;
 #define 粉色 FLinearColor(1.00f, 0.39f, 0.78f, 1.0f)//绿色
 #define 蓝色 FLinearColor(0, 2, 2.f, 0.f)//绿色  
 //绘制引擎矩形
-UGameplayStatics* iosde = (UGameplayStatics*)UGameplayStatics::StaticClass();
+UGameplayStatics* iosde = nullptr;
+inline UGameplayStatics* GetIOSDE() {
+    if (!iosde && UObject::GUObjectArray) {
+        iosde = (UGameplayStatics*)UGameplayStatics::StaticClass();
+    }
+    return iosde;
+}
 ASTExtraPlayerController *localPlayerController = 0;
-#define W2S(w, s) iosde->ProjectWorldToScreen(localPlayerController, w, true, s)
+#define W2S(w, s) (GetIOSDE() ? GetIOSDE()->ProjectWorldToScreen(localPlayerController, w, true, s) : false)
 void DrawRectangle(AHUD *HUD, FVector2D Pos, float Width, float Height, float Thickness, FLinearColor Color) {
     HUD->DrawLine(Pos.X, Pos.Y, Pos.X + Width, Pos.Y, Color, Thickness);
     HUD->DrawLine(Pos.X, Pos.Y, Pos.X, Pos.Y + Height, Color, Thickness);
