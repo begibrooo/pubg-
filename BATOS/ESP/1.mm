@@ -341,8 +341,16 @@ bool ConfigSilentAimEnable = false;//原false
             bool LootBox;
             bool Throwables;
             bool EnemyCount;
+            bool MiniRadar;
+            bool SmartFPS;
+            bool FOVArrow;
         };
         sESPMenu ESPMenu{false};//false
+
+static ImVec4 g_colVisible = ImVec4(0.2f, 1.0f, 0.35f, 1.0f);
+static ImVec4 g_colInvisible = ImVec4(1.0f, 0.18f, 0.18f, 1.0f);
+static ImVec4 g_colBot = ImVec4(0.78f, 0.78f, 0.82f, 0.88f);
+static ImVec4 g_colRadarBg = ImVec4(0.06f, 0.06f, 0.09f, 0.70f);
 
         
     };
@@ -982,6 +990,9 @@ NSString *resultx;
     Config.ESPMenu.背敌 = true;
     Config.ESPMenu.死亡盒子 = true;
     Config.ESPMenu.LootBox = true;
+    Config.ESPMenu.MiniRadar = true;
+    Config.ESPMenu.SmartFPS = true;
+    Config.ESPMenu.FOVArrow = true;
     射线 = true;
     载具 = true;
     GRWAR = true;
@@ -9462,10 +9473,31 @@ void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float 
                     };
                     ImGui::Combo("##linesetting", &SX, lineOrigins, IM_ARRAYSIZE(lineOrigins));
 
-                    const char* l_radar = (Al == 0) ? "Radar uslubi" : ((Al == 1) ? "Radar Style" : "Стиль радара");
-                    ImGui::Text("%s", l_radar);
-                    const char* ldear[] = { "Radar 1", "Radar 2", "Radar 3" };
-                    ImGui::Combo("##ld", &Radar, ldear, IM_ARRAYSIZE(ldear));
+                    const char* l_radar2d = (Al == 0) ? "Mini-Radar (2D Shaffof Xarita)" : ((Al == 1) ? "Mini-Radar (2D Transparent)" : "Мини-Радар (2D Прозрачный)");
+                    ImGui::Checkbox(l_radar2d, &Config.ESPMenu.MiniRadar);
+                    ImGui::SameLine();
+                    const char* l_fovarr = (Al == 0) ? "Dushman nishon belgisi (FOV Arrow)" : ((Al == 1) ? "Enemy Aiming Arrow" : "Стрелка прицеливания врага");
+                    ImGui::Checkbox(l_fovarr, &Config.ESPMenu.FOVArrow);
+
+                    const char* l_smartfps = (Al == 0) ? "Smart FPS (Batareya va Qizishga qarshi)" : ((Al == 1) ? "Smart FPS (Battery & Anti-Heat)" : "Smart FPS (Экономия батареи)");
+                    ImGui::Checkbox(l_smartfps, &Config.ESPMenu.SmartFPS);
+
+                    ImGui::Separator();
+                    const char* l_col_sec = (Al == 0) ? "Ranglarni sozlash (Color Picker):" : ((Al == 1) ? "Color Customization:" : "Настройка цветов:");
+                    ImGui::TextColored(ImVec4(0.2f, 0.95f, 0.7f, 1.0f), "%s", l_col_sec);
+
+                    ImGuiColorEditFlags colFlags = ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_NoSidePreview;
+                    const char* l_col_vis = (Al == 0) ? "Ko'rinadigan dushman (Visible)" : ((Al == 1) ? "Visible Enemy" : "Видимый враг");
+                    ImGui::ColorEdit4(l_col_vis, (float*)&g_colVisible, colFlags);
+                    ImGui::SameLine();
+                    const char* l_col_invis = (Al == 0) ? "Ko'rinmas dushman (Hidden)" : ((Al == 1) ? "Hidden Enemy" : "Невидимый враг");
+                    ImGui::ColorEdit4(l_col_invis, (float*)&g_colInvisible, colFlags);
+
+                    const char* l_col_bot = (Al == 0) ? "Bot rangi" : ((Al == 1) ? "Bot Color" : "Цвет бота");
+                    ImGui::ColorEdit4(l_col_bot, (float*)&g_colBot, colFlags);
+                    ImGui::SameLine();
+                    const char* l_col_rad = (Al == 0) ? "Radar foni" : ((Al == 1) ? "Radar Background" : "Фон радара");
+                    ImGui::ColorEdit4(l_col_rad, (float*)&g_colRadarBg, colFlags);
 
                     ImGui::Separator();
                     const char* l_dist_slider = (Al == 0) ? "ESP Masofasi (Metr)" : ((Al == 1) ? "ESP Max Distance" : "Дистанция ESP");
@@ -11970,6 +12002,27 @@ static const char* GetHighTierLootName(int itemId) {
     }
 }
 
+static bool IsPlayerAimingAtMe(ASTExtraPlayerCharacter* enemy, ASTExtraPlayerCharacter* me) {
+    if (!enemy || !me) return false;
+    FVector myHead = me->GetBonePos("Head", {});
+    FVector enemyHead = enemy->GetBonePos("Head", {});
+    if (myHead.X == 0 && myHead.Y == 0 && myHead.Z == 0) return false;
+    if (enemyHead.X == 0 && enemyHead.Y == 0 && enemyHead.Z == 0) return false;
+
+    FVector dir = myHead - enemyHead;
+    float len = sqrtf(dir.X*dir.X + dir.Y*dir.Y + dir.Z*dir.Z);
+    if (len < 10.0f) return false;
+    dir.X /= len; dir.Y /= len; dir.Z /= len;
+
+    FVector fwd = enemy->GetActorForwardVector();
+    float dot = fwd.X * dir.X + fwd.Y * dir.Y + fwd.Z * dir.Z;
+    if (dot > 1.0f) dot = 1.0f;
+    if (dot < -1.0f) dot = -1.0f;
+
+    float angleDeg = acosf(dot) * (180.0f / 3.14159265f);
+    return angleDeg <= 18.0f;
+}
+
 void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float scale) {
     if (!drawList || !IsLogin || scale <= 0.0f) return;
 
@@ -12044,6 +12097,16 @@ void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float 
         {"calf_r", "foot_r"}
     };
 
+    struct RadarBlip {
+        float angle;
+        float dist;
+        bool isBot;
+        bool isAiming;
+    };
+    static std::vector<RadarBlip> g_activeRadarBlips;
+    g_activeRadarBlips.clear();
+    bool anyEnemyAimingAtMe = false;
+
     const int numActors = pActors->Num();
     for (int i = 0; i < numActors; i++) {
         AActor* actor = (*pActors)[i];
@@ -12095,6 +12158,42 @@ void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float 
                 drawList->AddText(ImVec2(indX - 10.0f, indY + 7.0f), IM_COL32(255, 255, 255, 240), distB);
             }
 
+            bool isAimingAtMe = (!isBot && IsPlayerAimingAtMe(player, localPlayer));
+            if (isAimingAtMe) anyEnemyAimingAtMe = true;
+
+            if (Config.ESPMenu.MiniRadar && dist <= 350.0f) {
+                float camYaw = localPlayerController->PlayerCameraManager ? localPlayerController->PlayerCameraManager->CameraCache.POV.Rotation.Yaw : 0.0f;
+                FVector myLoc = localPlayer ? localPlayer->K2_GetActorLocation() : FVector();
+                float enemyAngle = atan2f(headPos.Y - myLoc.Y, headPos.X - myLoc.X) * (180.0f / 3.14159265f);
+                float relAngle = (enemyAngle - camYaw - 90.0f) * (3.14159265f / 180.0f);
+                g_activeRadarBlips.push_back({relAngle, dist, isBot, isAimingAtMe});
+            }
+
+            // Threat FOV Arrow around screen center pointing towards the aiming enemy
+            if (isAimingAtMe && Config.ESPMenu.FOVArrow) {
+                float camYaw = localPlayerController->PlayerCameraManager ? localPlayerController->PlayerCameraManager->CameraCache.POV.Rotation.Yaw : 0.0f;
+                FVector myLoc = localPlayer ? localPlayer->K2_GetActorLocation() : FVector();
+                float enemyAngle = atan2f(headPos.Y - myLoc.Y, headPos.X - myLoc.X) * (180.0f / 3.14159265f);
+                float relAngle = (enemyAngle - camYaw - 90.0f) * (3.14159265f / 180.0f);
+
+                float orbitR = std::min(displayW, displayH) * 0.28f;
+                float arrowCenterX = displayW * 0.5f + cosf(relAngle) * orbitR;
+                float arrowCenterY = displayH * 0.5f + sinf(relAngle) * orbitR;
+
+                float fastPulse = (sinf((float)ImGui::GetTime() * 10.0f) + 1.0f) * 0.5f;
+                ImU32 arrowCol = IM_COL32(255, (int)(30 * fastPulse), (int)(30 * fastPulse), 255);
+
+                float tipX = arrowCenterX + cosf(relAngle) * 16.0f;
+                float tipY = arrowCenterY + sinf(relAngle) * 16.0f;
+                float leftX = arrowCenterX - cosf(relAngle) * 8.0f - sinf(relAngle) * 10.0f;
+                float leftY = arrowCenterY - sinf(relAngle) * 8.0f + cosf(relAngle) * 10.0f;
+                float rightX = arrowCenterX - cosf(relAngle) * 8.0f + sinf(relAngle) * 10.0f;
+                float rightY = arrowCenterY - sinf(relAngle) * 8.0f - cosf(relAngle) * 10.0f;
+
+                drawList->AddTriangleFilled(ImVec2(tipX, tipY), ImVec2(leftX, leftY), ImVec2(rightX, rightY), arrowCol);
+                drawList->AddTriangle(ImVec2(tipX, tipY), ImVec2(leftX, leftY), ImVec2(rightX, rightY), IM_COL32(0, 0, 0, 200), 1.5f);
+            }
+
             if (!headOk || !rootOk) continue;
 
             ImVec2 headSc(scHead.X / scale, scHead.Y / scale);
@@ -12107,13 +12206,19 @@ void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float 
             ImVec2 boxMax(headSc.x + boxW * 0.5f, rootSc.y);
 
             bool isVisible = false;
-            if (localPlayerController->LineOfSightTo(player, headPos, true)) isVisible = true;
+            if (Config.ESPMenu.SmartFPS) {
+                if (dist <= 250.0f && (headOk || rootOk)) {
+                    isVisible = localPlayerController->LineOfSightTo(player, headPos, true);
+                }
+            } else {
+                isVisible = localPlayerController->LineOfSightTo(player, headPos, true);
+            }
 
             ImU32 espColor;
             if (isBot) {
-                espColor = isVisible ? IM_COL32(75, 220, 75, 240) : IM_COL32(200, 200, 200, 220);
+                espColor = isVisible ? ImGui::GetColorU32(g_colVisible) : ImGui::GetColorU32(g_colBot);
             } else {
-                espColor = isVisible ? IM_COL32(50, 255, 90, 255) : IM_COL32(255, 45, 45, 255);
+                espColor = isVisible ? ImGui::GetColorU32(g_colVisible) : ImGui::GetColorU32(g_colInvisible);
             }
 
             // 1. Ray Line
@@ -12327,6 +12432,83 @@ void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float 
         drawList->AddRect(ImVec2(alX - 14, alY - 6), ImVec2(alX + alSize.x + 14, alY + alSize.y + 6), IM_COL32(255, 255, 255, 240), 6.0f, 0, 1.5f);
         drawList->AddText(ImVec2(alX + 1, alY + 1), IM_COL32(0, 0, 0, 220), gAlert);
         drawList->AddText(ImVec2(alX, alY), IM_COL32(255, 255, 255, 255), gAlert);
+    }
+
+    if (anyEnemyAimingAtMe && Config.ESPMenu.FOVArrow) {
+        char aimAlert[64] = "! WARNING: ENEMY AIMING AT YOU !";
+        ImVec2 alSz = ImGui::CalcTextSize(aimAlert);
+        float ax = (displayW - alSz.x) * 0.5f;
+        float ay = 85.0f;
+        float fastPulse = (sinf((float)ImGui::GetTime() * 10.0f) + 1.0f) * 0.5f;
+        ImU32 alertBg = IM_COL32(220, (int)(20 * fastPulse), (int)(20 * fastPulse), 230);
+        drawList->AddRectFilled(ImVec2(ax - 12, ay - 4), ImVec2(ax + alSz.x + 12, ay + alSz.y + 4), alertBg, 4.0f);
+        drawList->AddRect(ImVec2(ax - 12, ay - 4), ImVec2(ax + alSz.x + 12, ay + alSz.y + 4), IM_COL32(255, 255, 255, 240), 4.0f, 0, 1.2f);
+        drawList->AddText(ImVec2(ax + 1, ay + 1), IM_COL32(0, 0, 0, 220), aimAlert);
+        drawList->AddText(ImVec2(ax, ay), IM_COL32(255, 255, 255, 255), aimAlert);
+    }
+
+    // ================= 2D MINI-RADAR =================
+    if (Config.ESPMenu.MiniRadar) {
+        float rRadius = 55.0f;
+        ImVec2 rCenter(displayW - rRadius - 25.0f, rRadius + 50.0f);
+        float maxRadarDist = 200.0f;
+
+        ImU32 rBg = ImGui::GetColorU32(g_colRadarBg);
+        drawList->AddCircleFilled(rCenter, rRadius, rBg, 32);
+        drawList->AddCircle(rCenter, rRadius, IM_COL32(255, 215, 0, 210), 32, 1.5f);
+        drawList->AddCircle(rCenter, rRadius * 0.5f, IM_COL32(255, 255, 255, 45), 24, 1.0f);
+        drawList->AddCircle(rCenter, rRadius * 0.25f, IM_COL32(255, 255, 255, 30), 24, 1.0f);
+
+        drawList->AddLine(ImVec2(rCenter.x - rRadius, rCenter.y), ImVec2(rCenter.x + rRadius, rCenter.y), IM_COL32(255, 255, 255, 30), 1.0f);
+        drawList->AddLine(ImVec2(rCenter.x, rCenter.y - rRadius), ImVec2(rCenter.x, rCenter.y + rRadius), IM_COL32(255, 255, 255, 30), 1.0f);
+
+        // Self icon (player heading): triangle pointing straight UP
+        drawList->AddTriangleFilled(
+            ImVec2(rCenter.x, rCenter.y - 5.5f),
+            ImVec2(rCenter.x - 4.0f, rCenter.y + 4.0f),
+            ImVec2(rCenter.x + 4.0f, rCenter.y + 4.0f),
+            IM_COL32(0, 255, 140, 255)
+        );
+        drawList->AddTriangle(
+            ImVec2(rCenter.x, rCenter.y - 5.5f),
+            ImVec2(rCenter.x - 4.0f, rCenter.y + 4.0f),
+            ImVec2(rCenter.x + 4.0f, rCenter.y + 4.0f),
+            IM_COL32(0, 0, 0, 200),
+            1.0f
+        );
+
+        for (const auto& blip : g_activeRadarBlips) {
+            float blipDist = (blip.dist / maxRadarDist) * (rRadius - 4.0f);
+            bool clamped = false;
+            if (blipDist > rRadius - 4.0f) {
+                blipDist = rRadius - 4.0f;
+                clamped = true;
+            }
+
+            float bX = rCenter.x + cosf(blip.angle) * blipDist;
+            float bY = rCenter.y + sinf(blip.angle) * blipDist;
+
+            ImU32 bCol;
+            if (blip.isAiming) {
+                float pulse = (sinf((float)ImGui::GetTime() * 10.0f) + 1.0f) * 0.5f;
+                bCol = IM_COL32(255, (int)(30 * pulse), (int)(30 * pulse), 255);
+            } else if (blip.isBot) {
+                bCol = ImGui::GetColorU32(g_colBot);
+            } else {
+                bCol = ImGui::GetColorU32(g_colInvisible);
+            }
+
+            if (clamped) {
+                drawList->AddCircleFilled(ImVec2(bX, bY), 2.5f, bCol);
+            } else {
+                drawList->AddCircleFilled(ImVec2(bX, bY), blip.isAiming ? 4.5f : 3.5f, bCol);
+                drawList->AddCircle(ImVec2(bX, bY), blip.isAiming ? 5.5f : 4.0f, IM_COL32(0, 0, 0, 180), 12, 1.0f);
+            }
+        }
+
+        const char* rTag = "RADAR 200M";
+        ImVec2 tSz = ImGui::CalcTextSize(rTag);
+        drawList->AddText(ImVec2(rCenter.x - tSz.x * 0.5f, rCenter.y + rRadius + 2.0f), IM_COL32(255, 255, 255, 180), rTag);
     }
 
     g_totalEnemies = totalEnemies;
