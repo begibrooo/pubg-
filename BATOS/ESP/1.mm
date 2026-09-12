@@ -9152,20 +9152,20 @@ bool callNotify = false;
         
       
         
-        CGFloat x = (([UIApplication sharedApplication].windows[0].rootViewController.view.frame.size.width) - 360) / 2;
-        CGFloat y = (([UIApplication sharedApplication].windows[0].rootViewController.view.frame.size.height) - 360) /2;
+        float winW = 560.0f;
+        float winH = 340.0f;
+        float winX = (io.DisplaySize.x > winW) ? (io.DisplaySize.x - winW) * 0.5f : 20.0f;
+        float winY = (io.DisplaySize.y > winH) ? (io.DisplaySize.y - winH) * 0.5f : 20.0f;
         static ImVec4 active = to_vec4(158, 158, 158, 255);
         static ImVec4 inactive = to_vec4(66, 66, 66, 255);
 
+        if (elapsedd < 1000 && !callNotify) {
+            ImGui::InsertNotification({ ImGuiToastType_Success, 3000, "Welcome to RAKHIMOV VIP ENGINE !", "" });
+            callNotify = true;
+        }
 
-if (elapsedd < 1000 && !callNotify) {
- ImGui::InsertNotification({ ImGuiToastType_Success, 3000, "Welcome to RAKHIMOV VIP ENGINE !", "" });
-   
- callNotify = true;
- }
-            //设置下一个窗口的大小
-        ImGui::SetNextWindowPos(ImVec2(x, y), ImGuiCond_FirstUseEver);
-        ImGui::SetNextWindowSize(ImVec2(480, 300), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowPos(ImVec2(winX, winY), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(winW, winH), ImGuiCond_FirstUseEver);
         
             if (MenDeal == true)
             {
@@ -9412,7 +9412,7 @@ if (elapsedd < 1000 && !callNotify) {
                     ImGui::SameLine();
                     const char* l_ray = (Al == 0) ? "Nur chizish (Ray)" : ((Al == 1) ? "Draw Ray" : "Линия (Ray)");
                     ImGui::Checkbox(l_ray, &射线);
-                    ImGui::SameLine();
+
                     const char* l_info = (Al == 0) ? "Ma'lumot (Info)" : ((Al == 1) ? "Info" : "Информация");
                     ImGui::Checkbox(l_info, &Config.ESPMenu.Name);
                     ImGui::SameLine();
@@ -9427,10 +9427,10 @@ if (elapsedd < 1000 && !callNotify) {
                     ImGui::SameLine();
                     const char* l_back = (Al == 0) ? "Orqadagi dushman" : ((Al == 1) ? "Back Alert" : "Враг сзади");
                     ImGui::Checkbox(l_back, &Config.ESPMenu.背敌);
-                    ImGui::SameLine();
+
                     const char* l_gren = (Al == 0) ? "Granata ogohlantirish" : ((Al == 1) ? "Grenade Alert" : "Оповещение гранат");
                     ImGui::Checkbox(l_gren, &GRWAR);
-
+                    ImGui::SameLine();
                     const char* l_bot = (Al == 0) ? "Botlarni ko'rsatmaslik" : ((Al == 1) ? "Ignore Bot" : "Игнор ботов");
                     ImGui::Checkbox(l_bot, &Config.ESPMenu.IgnoreBot);
                     ImGui::SameLine();
@@ -9476,13 +9476,13 @@ if (elapsedd < 1000 && !callNotify) {
                     ImGui::SameLine();
                     const char* l_aline = (Al == 0) ? "Nishon chizig'i" : ((Al == 1) ? "Aim Line" : "Линия аима");
                     ImGui::Checkbox(l_aline, &瞄准线);
-                    ImGui::SameLine();
+
                     const char* l_fix = (Al == 0) ? "O'qni to'g'rilash" : ((Al == 1) ? "Fix Shoot" : "Коррекция стрельбы");
                     ImGui::Checkbox(l_fix, &FixShoot);
-
+                    ImGui::SameLine();
                     const char* l_auto = (Al == 0) ? "Avto otish" : ((Al == 1) ? "Auto Fire" : "Автовыстрел");
                     ImGui::Checkbox(l_auto, &自动开火);
-                    ImGui::SameLine();
+
                     const char* l_ibot = (Al == 0) ? "Botlarni e'tiborsiz qoldirish" : ((Al == 1) ? "Ignore Bots" : "Игнор ботов");
                     ImGui::Checkbox(l_ibot, &IgnoreBot);
                     ImGui::SameLine();
