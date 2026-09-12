@@ -127,7 +127,7 @@ float 广角大小=110.f;
  bool IgnoreKnocked = false;
 bool 快速跳伞 =false;
  bool 高跳 = false;
-bool GRWAR = false;
+bool GRWAR = true;
  bool VisCheck = true;
  bool IgnoreBot = false;
  bool AboveHeadSc = true;
@@ -976,6 +976,7 @@ NSString *resultx;
     
     self.mtkView.device = self.device;
     self.mtkView.delegate = self;
+    self.mtkView.preferredFramesPerSecond = 120;
     self.mtkView.clearColor = MTLClearColorMake(0, 0, 0, 0);
     self.mtkView.backgroundColor = [UIColor colorWithRed:0 green:0 blue:0 alpha:0];
     self.mtkView.clipsToBounds = YES;
@@ -9120,7 +9121,7 @@ bool callNotify = false;
     CGFloat framebufferScale = view.window.screen.nativeScale;
 #endif
     io.DisplayFramebufferScale = ImVec2(framebufferScale, framebufferScale);
-    io.DeltaTime = 1 / float(view.preferredFramesPerSecond ?: 60);
+    io.DeltaTime = 1.0f / float(view.preferredFramesPerSecond ?: 120);
     
     
     id<MTLCommandBuffer> commandBuffer = [self.commandQueue commandBuffer];
@@ -10665,31 +10666,24 @@ int GetDeviceMaxFPSByDeviceLevel(int a1, int a2, Byte *a3)
     *a3 = result;
     return result;
 }
-void Circle3D(ImDrawList* draw, FVector origin, float radius, ImColor color, float thinkless)
+void Circle3D(AHUD* HUD, FVector origin, float radius, FLinearColor color, float thinkless)
 {
-    const int doan_thang = 50;
-    float step = 2 * IM_PI / doan_thang;
+    if (!HUD || !HUD->Canvas) return;
+    const int doan_thang = 36;
+    float step = 2.0f * M_PI / doan_thang;
     FVector2D prev;
-    Vector3 curValid3 = Vector3(origin.X + radius, origin.Y, origin.Z);
-    FVector curValidF;
-    curValidF.X = curValid3.X;
-    curValidF.Y = curValid3.Y;
-    curValidF.Z = curValid3.Z;
+    FVector curValidF(origin.X + radius, origin.Y, origin.Z);
     bool curValid = W2S(curValidF, &prev);
 
     for (int i = 1; i <= doan_thang; ++i)
     {
         float angle = i * step;
         FVector2D cur;
-        Vector3 nextValid3 = Vector3(origin.X + radius * cos(angle), origin.Y + radius * sin(angle), origin.Z);
-        FVector nextValidF;
-        nextValidF.X = nextValid3.X;
-        nextValidF.Y = nextValid3.Y;
-        nextValidF.Z = nextValid3.Z;
+        FVector nextValidF(origin.X + radius * cosf(angle), origin.Y + radius * sinf(angle), origin.Z);
         bool nextValid = W2S(nextValidF, &cur);
         if (curValid && nextValid)
         {
-            draw->AddLine(ImVec2(prev.X, prev.Y), ImVec2(cur.X, cur.Y), color, thinkless);
+            HUD->Canvas->K2_DrawLine(prev, cur, thinkless, color);
         }
         curValid = nextValid;
         prev = cur;
@@ -19062,64 +19056,41 @@ UGameplayStatics* gGameplayStatics = (UGameplayStatics*)UGameplayStatics::Static
                     }
                     if (gDistance <= 200.f)
                     {
-                        tslFont->LegacyFontSize =
-                        max(6, 15 - (int)(gDistance / 100.f));
-                        float txtWidth, txtHeight;
-                        std::wstring grenadetext = (L"危险/Dangerous");
-
-                        HUD->GetTextSize(grenadetext,
-                                          tslFont, 1.f, &txtWidth,
-                                          &txtHeight);
-                        FVector2D Location;
-                        if (W2S
-                            (RootComponent->RelativeLocation, &Location))
-                        {
-                            DrawOutlinedText(HUD,
-                                             FString(
-                                                     grenadetext),
-                                             FVector2D(Location.X,
-                                                       Location.Y + 34),COLOR_RED, COLOR_BLACK, true);
+                        std::wstring grenadetext;
+                        if (Grenade->ItemDefineID.TypeSpecificID == 602004) {
+                            grenadetext = L"🔥 MOLOTOV [" + std::to_wstring((int)gDistance) + L"m]";
+                        } else if (Grenade->ItemDefineID.TypeSpecificID == 602003) {
+                            grenadetext = L"⚡ STUN [" + std::to_wstring((int)gDistance) + L"m]";
+                        } else {
+                            grenadetext = L"💣 GRENADE [" + std::to_wstring((int)gDistance) + L"m]";
                         }
-;
-//                                                        }
-                        tslFont->LegacyFontSize = TSL_FONT_DEFAULT_SIZE;
-                        if (gDistance < 13)
-                        {
-                           
-                            std::wstring gwarn;
-                            gwarn = std::wstring(L"MOVE!!MOVE!!");//iAwareTexSiz
-                       
-                            tslFont->LegacyFontSize = 4 + iAwareTexSiz;
-                            DrawOutlinedText(HUD, FString(gwarn),
-                                             FVector2D(screenWidth / 2,
-                                                       screenHeight / 2),
-                                             COLOR_RED, COLOR_BLACK, true);
-                            tslFont->LegacyFontSize =
-                            TSL_FONT_DEFAULT_SIZE;
-                           
-                            
-                            
-                        }//
-                        {
-                            
 
-                            ImDrawList* draw;
-               
-                            FVector2D Cross;
-                            
-                            Cross.X = 890.0f;
-                            Cross.Y = 840.0f; // Front
-//                            Cross.Z = 3.0f; // Height
-                            FVector bbOrigin =
-                            RootComponent->RelativeLocation;
+                        FVector2D Location;
+                        if (W2S(RootComponent->RelativeLocation, &Location))
+                        {
+                            tslFont->LegacyFontSize = 18;
+                            DrawOutlinedText(HUD, FString(grenadetext.c_str()), FVector2D(Location.X, Location.Y + 25), COLOR_RED, COLOR_BLACK, true);
+                        }
+                        tslFont->LegacyFontSize = TSL_FONT_DEFAULT_SIZE;
+
+                        // Danger warning if grenade is in lethal distance (< 15 meters)
+                        if (gDistance < 15.0f)
+                        {
+                            std::wstring gwarn = L"⚠️ DANGER: GRENADE! [" + std::to_wstring((int)gDistance) + L"m] ⚠️";
+                            tslFont->LegacyFontSize = 22;
+                            DrawOutlinedText(HUD, FString(gwarn.c_str()), FVector2D(screenWidth / 2, screenHeight / 2 - 100), COLOR_RED, COLOR_BLACK, true);
+                            tslFont->LegacyFontSize = TSL_FONT_DEFAULT_SIZE;
+                        }
+
+                        {
+                            FVector2D Cross(screenWidth / 2.0f, 60.0f); // Top ray indicator
+                            FVector bbOrigin = RootComponent->RelativeLocation;
                             FVector bbExtends(700, 700, 3);
                             FVector bbExtends2(10, 10, 3);
-                            FVector bbOrigin2 =
-                            RootComponent->RelativeLocation;
+                            FVector bbOrigin2 = RootComponent->RelativeLocation;
                             bbOrigin -= bbExtends / 2;
                             bbOrigin2 -= bbExtends2 / 2;
-                            // bottom plane
-//                            FVector grenadePos = bbOrigin;
+
                             FVector one = bbOrigin;
                             FVector two = bbOrigin;
                             FVector giua = bbOrigin2;
@@ -19133,13 +19104,12 @@ UGameplayStatics* gGameplayStatics = (UGameplayStatics*)UGameplayStatics::Static
                             FVector five = one;
                             five.Z += bbExtends.Z;
                             FVector six = two;
-                            FVector six2 = giua;
                             six.Z += bbExtends.Z;
-                            six2.Z += bbExtends2.Z;
                             FVector seven = three;
                             seven.Z += bbExtends.Z;
                             FVector eight = four;
                             eight.Z += bbExtends.Z;
+
                             FVector2D s1, s2, s3, s4, s5, s6, s7, s8, sgiua;
                             FVector2D grenadePos;
                             if (W2S(one, &s1) && W2S(two, &s2)
@@ -19147,27 +19117,23 @@ UGameplayStatics* gGameplayStatics = (UGameplayStatics*)UGameplayStatics::Static
                                 && W2S(five, &s5) && W2S(six, &s6)
                                 && W2S(seven, &s7) && W2S(eight, &s8) && W2S(giua, &sgiua) && W2S(Grenade->K2_GetActorLocation(), &grenadePos))
                             {
-                                HUD->Canvas->K2_DrawLine(Cross, sgiua, 2.3f, COLOR_YELLOW);
-                                DrawLine(HUD, s1, s2, 1.3f, COLOR_RED);
-                                                                DrawLine(HUD, s2, s3,1.3f, COLOR_RED);
-                                                            DrawLine(HUD, s3, s4, 1.3f, COLOR_RED);
-                                                                DrawLine(HUD, s4, s1, 1.3f, COLOR_RED);
-                                DrawLine(HUD, s5, s6, 1.3f, COLOR_RED);
-                                DrawLine(HUD, s6, s7, 1.3f, COLOR_RED);
-                                DrawLine(HUD, s7, s8,1.3f, COLOR_RED);
-                                DrawLine(HUD, s8, s5, 1.3f, COLOR_RED);
-                                DrawLine(HUD, s1, s5, 1.3f, COLOR_RED);
-DrawLine(HUD, s2, s6, 1.3f, COLOR_RED);
-                                DrawLine(HUD, s3, s7, 1.3f, COLOR_RED);
-                                DrawLine(HUD, s4, s8, 1.3f, COLOR_RED);
-                             
+                                HUD->Canvas->K2_DrawLine(Cross, sgiua, 2.0f, COLOR_YELLOW);
+                                DrawLine(HUD, s1, s2, 1.5f, COLOR_RED);
+                                DrawLine(HUD, s2, s3, 1.5f, COLOR_RED);
+                                DrawLine(HUD, s3, s4, 1.5f, COLOR_RED);
+                                DrawLine(HUD, s4, s1, 1.5f, COLOR_RED);
+                                DrawLine(HUD, s5, s6, 1.5f, COLOR_RED);
+                                DrawLine(HUD, s6, s7, 1.5f, COLOR_RED);
+                                DrawLine(HUD, s7, s8, 1.5f, COLOR_RED);
+                                DrawLine(HUD, s8, s5, 1.5f, COLOR_RED);
+                                DrawLine(HUD, s1, s5, 1.5f, COLOR_RED);
+                                DrawLine(HUD, s2, s6, 1.5f, COLOR_RED);
+                                DrawLine(HUD, s3, s7, 1.5f, COLOR_RED);
+                                DrawLine(HUD, s4, s8, 1.5f, COLOR_RED);
 
-                                Circle3D(draw, Grenade->K2_GetActorLocation(), 720, ImColor(0, 255, 255, 255), 60);
-                            
+                                // 3D blast lethal radius circle on ground around grenade
+                                Circle3D(HUD, Grenade->K2_GetActorLocation(), 720.0f, COLOR_RED, 2.0f);
                             }
-                            
-                            
-                            
                         }
                     }
                 }
