@@ -8,7 +8,7 @@ class SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
             new_req.headers.pop("authorization", None)
         return new_req
 
-token = "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"
+token = os.environ.get("GITHUB_TOKEN", "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")
 run_id = 34649959942
 headers = {"Authorization": f"Bearer {token}", "User-Agent": "Python", "Accept": "application/vnd.github.v3+json"}
 opener = urllib.request.build_opener(SafeRedirectHandler)

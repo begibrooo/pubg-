@@ -347,14 +347,13 @@ bool ConfigSilentAimEnable = false;//原false
         };
         sESPMenu ESPMenu{false};//false
 
+    };
+    sConfig Config{false};//false
+
 static ImVec4 g_colVisible = ImVec4(0.2f, 1.0f, 0.35f, 1.0f);
 static ImVec4 g_colInvisible = ImVec4(1.0f, 0.18f, 0.18f, 1.0f);
 static ImVec4 g_colBot = ImVec4(0.78f, 0.78f, 0.82f, 0.88f);
 static ImVec4 g_colRadarBg = ImVec4(0.06f, 0.06f, 0.09f, 0.70f);
-
-        
-    };
-    sConfig Config{false};//false
 //
 
 
