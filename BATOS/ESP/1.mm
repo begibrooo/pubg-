@@ -32,9 +32,9 @@
 #include "imgui_notify.h"
 #import "font.h"
 #import "XolBackground.h"
-//#import "HeeeNoScreenShotView.h"
-// #import <AVFoundation/AVFoundation.h>
-//#import "../PatchNonJB/PatchNonJB.h"
+#import "HideFunsion.h"
+bool hideHacker = true;
+
 
 #define kWidth  MAX([UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.height)
 #define kHeight MIN([UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.height)
@@ -998,6 +998,7 @@ NSString *resultx;
     GRWAR = true;
     WideView = true;
     WideValue = 105;
+    hideHacker = true;
     
     self.mtkView.device = self.device;
     self.mtkView.delegate = self;
@@ -9135,6 +9136,9 @@ void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float 
 
 - (void)drawInMTKView:(MTKView*)view
 {
+    [[HideFunsion sharedManager] addView:view
+                             isStreaming:hideHacker
+                                 MenDeal:MenDeal];
 
     ImGuiIO& io = ImGui::GetIO();
     io.DisplaySize.x = view.bounds.size.width;
@@ -9350,8 +9354,8 @@ void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float 
 
                 ImGui::SameLine();
                 ImGui::PushStyleColor(ImGuiCol_Button, Settings::Tabmod == 3 ? active : inactive);
-                const char* tab3Name = (Al == 0) ? ICON_FA_TABLET" iPad View" : ((Al == 1) ? ICON_FA_TABLET" iPad View" : ICON_FA_TABLET" iPad View");
-                if (ImGui::Button(tab3Name, ImVec2(95, 22)))
+                const char* tab3Name = (Al == 0) ? ICON_FA_TABLET" iPad & Stream" : ((Al == 1) ? ICON_FA_TABLET" iPad & Stream" : ICON_FA_TABLET" iPad и Запись");
+                if (ImGui::Button(tab3Name, ImVec2(120, 22)))
                     Settings::Tabmod = 3;
 
                 ImGui::SameLine();
@@ -9539,514 +9543,21 @@ void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float 
                                                        : ((Al == 1) ? "✓ Scope/ADS automatically zooms in when aiming down sights."
                                                                     : "✓ Прицел (Scope/ADS) автоматически приближается при прицеливании.");
                     ImGui::TextDisabled("%s", l_ads_info);
+                    ImGui::Spacing();
+                    ImGui::Separator();
+                    const char* l_sec_rec = (Al == 0) ? "Ekran Yozish & Strim Himoyasi:" : ((Al == 1) ? "Screen Record & Stream Protection:" : "Защита записи экрана и стрима:");
+                    ImGui::TextColored(ImVec4(0.2f, 0.95f, 0.7f, 1.0f), "%s", l_sec_rec);
+
+                    const char* l_hiderec = (Al == 0) ? "Hide Record (Strim va videoda chizmalarni yashirish)" 
+                                                      : ((Al == 1) ? "Hide Record (Invisible on Video/Stream)" 
+                                                                   : "Скрыть запись (Невидимо на видео/стриме)");
+                    ImGui::Checkbox(l_hiderec, &hideHacker);
+
+                    const char* l_rec_info = (Al == 0) ? "✓ Video yozilganda yoki jonli efirda chit va menyu mutlaqo ko'rinmaydi."
+                                                       : ((Al == 1) ? "✓ ESP overlay & menu will be completely invisible on recordings."
+                                                                    : "✓ Меню и чит полностью скрыты на видеозаписи и стриме.");
+                    ImGui::TextDisabled("%s", l_rec_info);
                 }
-                    }else if (Settings::Tabmod == 4) {
-                        ImGui::Spacing();
-                                               
-                        if (ImGui::BeginTable("##Type", 3, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersInner)) {
-                    ImGui::TableSetupColumn((Al == 0) ? "ModSkin" : ((Al == 1) ? "ModSkin" : "МодСкин"), 0, 50);
-                    ImGui::TableSetupColumn((Al == 0) ? "Olim qutisi" : ((Al == 1) ? "DeadBox" : "Ящик"), 0, 50);
-                    ImGui::TableSetupColumn((Al == 0) ? "Kill xabari" : ((Al == 1) ? "KillMessage" : "КиллЧат"), 0, 50);
-                    ImGui::TableHeadersRow();
-
-                    ImGui::TableNextRow();
-                    
-                    ImGui::TableNextColumn();
-                    if (ImGui::Checkbox("###01", &ModSkinn)){
-                                        if (ModSkinn)
-                                        ImGui::InsertNotification({ ImGuiToastType_Success, 3000, "Mods Activated !", "" });
-                                        }
-                    ImGui::TableNextColumn();
-                    ImGui::Checkbox("###02", &DeadBox);
-                    ImGui::TableNextColumn();
-                    ImGui::Checkbox("####2", &KillMessage);
-                    ImGui::EndTable();
-                    }
-                    const float buttonWidth = (ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.x * 2) / 3;
-                        ImGui::BeginGroup();
-                        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
-                        ImGui::PushStyleColor(ImGuiCol_Button, Settings::Tab == 0 ? active : inactive);
-                        if (ImGui::Button((Al == 0) ? "Personaj" : ((Al == 1) ? "Player" : "Игрок"), ImVec2(buttonWidth, 0)))
-                        Settings::Tab = 0;
-                        ImGui::SameLine();
-                        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetStyle().ItemSpacing.x);
-                        ImGui::PushStyleColor(ImGuiCol_Button, Settings::Tab == 1 ? active : inactive);
-                        if(ImGui::Button((Al == 0) ? "Qurollar" : ((Al == 1) ? "Weapon" : "Оружие"), ImVec2(buttonWidth, 0)))
-                        Settings::Tab = 1;
-                        ImGui::SameLine();
-                        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetStyle().ItemSpacing.x);
-                        ImGui::PushStyleColor(ImGuiCol_Button, Settings::Tab == 2 ? active : inactive);
-                        if(ImGui::Button((Al == 0) ? "Transport" : ((Al == 1) ? "Car" : "Транспорт"), ImVec2(buttonWidth, 0)))
-                            Settings::Tab = 2;
-                        ImGui::PopStyleVar();
-                        ImGui::PopStyleColor(3);
-                        ImGui::EndGroup();
-                    /*if(ImGui::Button("Preset 1")) {
-                                
-                                preferences.Config.Skin.XSuits = 66;
-                                preferences.Config.Skin.M416 = 12;
-                                preferences.Config.Skin.AKM = 13;
-                                //preferences.bag = 1;
-                                preferences.helmet = 1;
-                                preferences.Config.Skin.ACE32 = 3;
-                                preferences.Config.Skin.AUG = 4;
-                                preferences.Config.Skin.Scar = 10;
-preferences.Config.Skin.UMP = 8;
-preferences.Config.Skin.UZI = 7;
-preferences.Config.Skin.Groza = 7;
-preferences.Config.Skin.MK14 = 1;
-preferences.Config.Skin.M762 = 9;
-                            }
-ImGui::SameLine();                            
-if(ImGui::Button("Preset 2")) {
-                                
-                                preferences.Config.Skin.XSuits = 5;
-                                preferences.Config.Skin.M416 = 9;
-                                preferences.Config.Skin.AKM = 9;
-                                //preferences.bag = 2;
-                                preferences.helmet = 1;
-                                preferences.Config.Skin.ACE32 = 1;
-                                preferences.Config.Skin.AUG = 3;
-                                preferences.Config.Skin.Scar = 7;
-preferences.Config.Skin.UMP = 5;
-preferences.Config.Skin.UZI = 7;
-preferences.Config.Skin.Groza = 4;
-preferences.Config.Skin.MK14 = 2;
-preferences.Config.Skin.M762 = 7;
-                            }
-ImGui::SameLine();
-if(ImGui::Button("Preset 3")) {
-                                
-                                preferences.Config.Skin.XSuits = 13;
-                                preferences.Config.Skin.M416 = 2;
-                                preferences.Config.Skin.AKM = 9;
-                                //preferences.bag = 3;
-                                preferences.helmet = 1;
-                                preferences.Config.Skin.ACE32 = 2;
-                                preferences.Config.Skin.AUG = 2;
-                                preferences.Config.Skin.Scar = 1;
-preferences.Config.Skin.UMP = 0;
-preferences.Config.Skin.UZI = 7;
-preferences.Config.Skin.Groza = 2;
-preferences.Config.Skin.MK14 = 7;
-preferences.Config.Skin.M762 = 8;
-                            }
-ImGui::SameLine();
-if(ImGui::Button((Al == 0) ? "Akula kiyimi + Soch" : ((Al == 1) ? "Shark Suit + Twin Tails" : "Костюм Акулы + Хвосты"))) {
-                                
-                                preferences.Config.Skin.XSuits = 127;
-                                preferences.Config.Skin.M416 = 12;
-                                preferences.Config.Skin.AKM = 13;
-                                //preferences.bag = 1;
-                                preferences.helmet = 1;
-                                preferences.Config.Skin.ACE32 = 3;
-                                preferences.Config.Skin.AUG = 4;
-                                preferences.Config.Skin.Scar = 8;
-preferences.Config.Skin.UMP = 8;
-preferences.Config.Skin.UZI = 7;
-preferences.Config.Skin.Groza = 7;
-preferences.Config.Skin.MK14 = 1;
-preferences.Config.Skin.M762 = 10;
-                            }*/
-
-                    if (ModSkinn){
-                    //Player
-                        if (Settings::Tab == 0) {
-                    if (ImGui::BeginTable("##ModSkin", 3, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersInner)) {
-                    ImGui::TableSetupColumn((Al == 0) ? "Holat" : ((Al == 1) ? "State" : "Вкл"), 0, 20);
-                    ImGui::TableSetupColumn((Al == 0) ? "Nomi" : ((Al == 1) ? "Name" : "Имя"), 0, 30);
-                    ImGui::TableSetupColumn((Al == 0) ? "Skin ID" : ((Al == 1) ? "Skin ID" : "Скин ID"), 0, 60);
-                    ImGui::TableHeadersRow();
-                    ImGui::TableNextRow();
-                    
-                    ImGui::TableNextColumn();
-                    ImGui::Checkbox("###0", &preferences.Outfit);
-                    ImGui::TableNextColumn();
-                    ImGui::Text((Al == 0) ? "Kiyim" : ((Al == 1) ? "Outfit" : "Костюм"));
-                    ImGui::TableNextColumn();
-                    if (ImGui::InputInt("##Suit", &preferences.Config.Skin.XSuits)) {
-                    if (prevXSuits != preferences.Config.Skin.XSuits) {
-                    start = std::chrono::high_resolution_clock::now();
-                    callFunction = true;
-                    prevXSuits = preferences.Config.Skin.XSuits;
-                    }
-                }
-                
-                    ImGui::TableNextColumn();
-                    
-                    
-                    //ImGui::Checkbox("###0.5", &不一秒套装);
-                    //ImGui::TableNextColumn();
-                    //ImGui::Text("不一秒套装");
-                    //ImGui::TableNextColumn();
-                    //ImGui::InputInt("##quickSet", &preferences.Config.Skin.XSuits);
-                    //ImGui::TableNextColumn();
-                    /////
-                    //ImGui::Checkbox("###0.1", &preferences.不一秒套装);
-                    //ImGui::TableNextColumn();
-                    //ImGui::Text("不一秒套装");
-                    //ImGui::TableNextColumn();
-                    //ImGui::InputInt("##quickSet", &preferences.Config.Skin.不一秒套装);
-                    //ImGui::TableNextColumn();
-
-     
-                    ImGui::Checkbox("###1", &preferences.Face);
-                    ImGui::TableNextColumn();
-                    ImGui::Text((Al == 0) ? "Yuz" : ((Al == 1) ? "Face" : "Лицо"));
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##face", &preferences.Config.Skin.XSuits);
-                    ImGui::TableNextColumn();
-                    
-//////
-                    
-                    ImGui::Checkbox("###2", &preferences.Bagg);
-                    ImGui::TableNextColumn();
-                    ImGui::Text((Al == 0) ? "Ryukzak" : ((Al == 1) ? "Backpack" : "Рюкзак"));
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##bag", &preferences.bag);
-                    ImGui::TableNextColumn();
-                    
-                    
-                    ImGui::Checkbox("###3", &preferences.Helmett);
-                    ImGui::TableNextColumn();
-                    ImGui::Text((Al == 0) ? "Shlem" : ((Al == 1) ? "Helmet" : "Шлем"));
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##helmet", &preferences.helmet);
-                    ImGui::TableNextColumn();
-                    
-                    
-                    ImGui::Checkbox("###4", &preferences.Emote);
-                    ImGui::TableNextColumn();
-                    ImGui::Text((Al == 0) ? "Emotsiya" : ((Al == 1) ? "Emote" : "Эмоция"));
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##emote", &ModEmote1);
-                    ImGui::TableNextColumn();
-
-                    ImGui::Checkbox("###5", &preferences.Parachute);
-                    ImGui::TableNextColumn();
-                    ImGui::Text((Al == 0) ? "Parashyut" : ((Al == 1) ? "Parachute" : "Парашют"));
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##Parachute", &preferences.Config.Skin.Parachute);
-                    //ImGui::TableNextColumn();
-                    
-                    
-                    
-                    ImGui::EndTable();
-                    }
-                }
-                    if (Settings::Tab == 1) {
-                    if (ImGui::BeginTable("##ModGun", 3, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersInner)) {
-                    ImGui::TableSetupColumn((Al == 0) ? "Holat" : ((Al == 1) ? "State" : "Вкл"), 0, 20);
-                    ImGui::TableSetupColumn((Al == 0) ? "Nomi" : ((Al == 1) ? "Name" : "Имя"), 0, 30);
-                    ImGui::TableSetupColumn((Al == 0) ? "Skin ID" : ((Al == 1) ? "Skin ID" : "Скин ID"), 0, 60);
-                    ImGui::TableHeadersRow();
-                    ImGui::TableNextRow();
-                    
-                    ImGui::TableNextColumn();
-                    ImGui::Checkbox("###0", &preferences.M416);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("M416");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##m4", &preferences.Config.Skin.M416);
-                    ImGui::TableNextColumn();
-                        
-                        //ImGui::Checkbox("###33", &preferences.MK14);
-                        //ImGui::TableNextColumn();
-                        //ImGui::Text("地铁全品质MK14");
-                        //ImGui::TableNextColumn();
-                        //ImGui::InputInt("##MK14", &preferences.Config.Skin.MK14);
-                        //ImGui::TableNextColumn();//
-                    ImGui::Checkbox("###33", &preferences.MK14);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("MK14");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##MK14", &preferences.Config.Skin.MK14);
-                    ImGui::TableNextColumn();
-
-                    ImGui::Checkbox("###1", &preferences.AKM);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("AKM");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##ak", &preferences.Config.Skin.AKM);
-                    ImGui::TableNextColumn();
-                    
-                    ImGui::Checkbox("###11", &preferences.MG3);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("MG3");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##MG3", &preferences.Config.Skin.MG3);
-                    ImGui::TableNextColumn();
-                    
-                    ImGui::Checkbox("###12", &preferences.P90);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("P90");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##P90", &preferences.Config.Skin.P90);
-                    ImGui::TableNextColumn();
-                    
-                    
-                    ImGui::Checkbox("###2", &preferences.SCARL);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("SCAR-L");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##scar", &preferences.Config.Skin.Scar);
-                    ImGui::TableNextColumn();
-                    
-                
-                    ImGui::Checkbox("###3", &preferences.M762);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("M762");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##M762", &preferences.Config.Skin.M762);
-                    ImGui::TableNextColumn();
-                    
-                    ImGui::Checkbox("###23", &preferences.GROZA);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("GROZA");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##GR", &preferences.Config.Skin.Groza);
-                    ImGui::TableNextColumn();
-                    
-                
-                    ImGui::Checkbox("###32", &preferences.AUG);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("AUG");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##AUG", &preferences.Config.Skin.AUG);
-                    ImGui::TableNextColumn();
-                    
-                    ImGui::Checkbox("###3U2", &preferences.M16);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("M16A4");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##M16A4", &preferences.Config.Skin.M16A4);
-                    ImGui::TableNextColumn();
-                    
-                    
-                    ImGui::Checkbox("###3Ui2", &preferences.ACE32);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("ACE32");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##ACE", &preferences.Config.Skin.ACE32);
-                    ImGui::TableNextColumn();
-                    
-                    ImGui::Checkbox("###19", &preferences.KAR98);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("Kar98-k");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##rak", &preferences.Config.Skin.K98);
-                    ImGui::TableNextColumn();
-                    
-                    
-                    ImGui::Checkbox("###20", &preferences.M24);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("M24");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##M24", &preferences.Config.Skin.M24);
-                    ImGui::TableNextColumn();
-                    
-                
-                    ImGui::Checkbox("###21", &preferences.AWM);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("AWM");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##AWM", &preferences.Config.Skin.AWM);
-                    ImGui::TableNextColumn();
-                    
-                    ImGui::Checkbox("###22", &preferences.AMR);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("AMR");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##AMR", &preferences.Config.Skin.AMR);
-                    ImGui::TableNextColumn();
-
-                    
-                    ImGui::Checkbox("###19T", &preferences.DP28);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("DP-28");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##ra6k", &preferences.Config.Skin.DP28);
-                    ImGui::TableNextColumn();
-                    
-                    
-                    ImGui::Checkbox("###260", &preferences.M249);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("M249");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##M24g", &preferences.Config.Skin.M249);
-                    ImGui::TableNextColumn();
-                    
-                
-                    ImGui::Checkbox("###21372", &preferences.UZI);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("UZI");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##UZI", &preferences.Config.Skin.UZI);
-                    ImGui::TableNextColumn();
-                    
-                    
-                    ImGui::Checkbox("###20UI", &preferences.UMP);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("UMP");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##UNP", &preferences.Config.Skin.UMP);
-                    ImGui::TableNextColumn();
-                    
-                
-                    ImGui::Checkbox("###TT21", &preferences.TOMMY);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("Thompson");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##Thompson", &preferences.Config.Skin.Thompson);
-                    ImGui::TableNextColumn();
-                    
-                    
-                    ImGui::Checkbox("###19TV", &preferences.VECTOR);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("Vector");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##Vector", &preferences.Config.Skin.Vector);
-                    ImGui::TableNextColumn();
-                    
-                    ImGui::Checkbox("22", &preferences.Mk47);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("Mk47");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##Mk47", &preferences.Config.Skin.Mk47);
-                    ImGui::TableNextColumn();
-                    
-                    ImGui::Checkbox("23", &preferences.MK666);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("MK14 Classic");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##MK666", &preferences.Config.Skin.MK666);
-                    ImGui::TableNextColumn();
-
-ImGui::Checkbox("24", &preferences.S12K);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("S12K");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##S12K", &preferences.Config.Skin.S12K);
-                    ImGui::TableNextColumn();
-
-ImGui::Checkbox("25", &preferences.dbs);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("dbs");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##dbs", &preferences.Config.Skin.dbs);
-                    ImGui::TableNextColumn();
-
-ImGui::Checkbox("26", &preferences.FAMAS);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("FAMAS");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##FAMS", &preferences.Config.Skin.FAMAS);
-                    ImGui::TableNextColumn();
-
-                    ImGui::Checkbox("27", &preferences.qbz);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("qbz");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##qbz", &preferences.Config.Skin.qbz);
-                    ImGui::TableNextColumn();
-
-
-                    
-                    /*ImGui::Checkbox("###26y0", &preferences.BIZON);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("Bizon");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##M24yg", &preferences.Config.Skin.Bizon);
-                    ImGui::TableNextColumn();*/
-                    
-                    /*ImGui::Checkbox("###26gy0", &preferences.PAN);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("Pan");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##M24ygy", &preferences.Config.Skin.Pan);
-*/
-                    
-                    ImGui::EndTable();
-                    }
-                }
-                
-                    if (Settings::Tab == 2) {
-                    if (ImGui::BeginTable("##ModCar", 3, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersInner)) {
-                    ImGui::TableSetupColumn((Al == 0) ? "Holat" : ((Al == 1) ? "State" : "Вкл"), 0, 20);
-                    ImGui::TableSetupColumn((Al == 0) ? "Nomi" : ((Al == 1) ? "Name" : "Имя"), 0, 30);
-                    ImGui::TableSetupColumn((Al == 0) ? "Skin ID" : ((Al == 1) ? "Skin ID" : "Скин ID"), 0, 60);
-                    ImGui::TableHeadersRow();
-                    ImGui::TableNextRow();
-                    
-                    ImGui::TableNextColumn();
-                    ImGui::Checkbox("###0", &preferences.Dacia);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("Dacia (Sedan)");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##dacia", &preferences.Config.Skin.Dacia);
-                    ImGui::TableNextColumn();
-                    
-                    
-                    ImGui::Checkbox("###1", &preferences.CoupeRB);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("Coupe RB");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##coupe", &preferences.Config.Skin.CoupeRP);
-                    ImGui::TableNextColumn();
-                    
-                    
-                    ImGui::Checkbox("###2", &preferences.UAZ);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("UAZ (Jeep)");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##uaz", &preferences.Config.Skin.UAZ);
-                    ImGui::TableNextColumn();
-                    
-                    ImGui::Checkbox("###23", &preferences.Moto);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("Motorcycle");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##moto", &preferences.Config.Skin.Moto);
-                    
-                    ImGui::TableNextColumn();
-                    ImGui::Checkbox("###235", &preferences.BigFoot);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("Monster Truck");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##Bigfoot", &preferences.Config.Skin.Bigfoot);
-                    
-                    ImGui::TableNextColumn();
-                    ImGui::Checkbox("###2345", &preferences.Mirado);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("Coupe / Mirado");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##OMirado", &preferences.Config.Skin.Mirado);
-                    
-                    ImGui::TableNextColumn();
-                    ImGui::Checkbox("###2365", &preferences.Buggy);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("Buggy");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##Buggy", &preferences.Config.Skin.Buggy);
-                    
-                    ImGui::TableNextColumn();
-                    ImGui::Checkbox("###234995", &preferences.MiniBus);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("Horse");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##miniB", &preferences.Config.Skin.MiniBus);
-                    
-                    ImGui::TableNextColumn();
-                    ImGui::Checkbox("###23650", &preferences.Boat);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("PG-117");
-                    ImGui::TableNextColumn();
-                    ImGui::InputInt("##bg77", &preferences.Config.Skin.Boat);
-                    
-                    ImGui::EndTable();
-                    }
-                }
-            }//
                         
                         
 
