@@ -188,6 +188,7 @@ bool init4 = false;
 bool init5 = false;
 bool WideView = false;
 int WideValue = 105;
+float g_espMaxDistance = 500.0f;
 //定义区
 //概率子追配置
 
@@ -9460,6 +9461,18 @@ void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float 
                     ImGui::Combo("##ld", &Radar, ldear, IM_ARRAYSIZE(ldear));
 
                     ImGui::Separator();
+                    const char* l_dist_slider = (Al == 0) ? "ESP Masofasi (Metr)" : ((Al == 1) ? "ESP Max Distance" : "Дистанция ESP");
+                    ImGui::SliderFloat(l_dist_slider, &g_espMaxDistance, 100.0f, 600.0f, "%.0f M");
+
+                    const char* l_ipad = (Al == 0) ? "iPad Rejimi (Keng ko'rish - FOV)" : ((Al == 1) ? "iPad View (Wide FOV)" : "iPad Режим (Широкий обзор)");
+                    ImGui::Checkbox(l_ipad, &WideView);
+                    if (WideView) {
+                        ImGui::SameLine();
+                        const char* l_fovslider = (Al == 0) ? "FOV burchagi" : ((Al == 1) ? "FOV Angle" : "Угол FOV");
+                        ImGui::SliderInt(l_fovslider, &WideValue, 85, 130);
+                    }
+
+                    ImGui::Separator();
                     const char* lootMenuTitle = (Al == 0) ? "[ Qo'shimcha ESP ]" : ((Al == 1) ? "[ Extra Loot ESP ]" : "[ Дополнительный ESP ]");
                     if (ImGui::BeginMenu(lootMenuTitle)) {
                         const char* l_veh = (Al == 0) ? "Transport vositalari" : ((Al == 1) ? "Draw Vehicle" : "Транспорт");
@@ -9470,6 +9483,12 @@ void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float 
                     }
                 }
                 else if (Settings::Tabmod == 2) {
+                    const char* aimWarn = (Al == 0) ? "⚠️ OGOHLANTIRISH: Aimbot server tomonidan tekshiriladi va 10 YIL BAN berishi mumkin!"
+                                                    : ((Al == 1) ? "⚠️ WARNING: Aimbot is server-detected and causes 10-YEAR BAN!"
+                                                                 : "⚠️ ВНИМАНИЕ: Аимбот проверяется сервером и вызывает БАН на 10 ЛЕТ!");
+                    ImGui::TextColored(ImVec4(1.0f, 0.25f, 0.25f, 1.0f), "%s", aimWarn);
+                    ImGui::Separator();
+
                     const char* l_aim = (Al == 0) ? "Aimbot" : ((Al == 1) ? "Aimbot" : "Аимбот");
                     ImGui::Checkbox(l_aim, &AimBot);
                     ImGui::SameLine();
@@ -9535,9 +9554,10 @@ void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float 
                 }
                 else if (Settings::Tabmod == 3) {
                     const char* warnMsg = (Al == 0) 
-                        ? "Eslatma: Xotira funksiyalaridan ehtiyotkorlik bilan foydalaning!" 
-                        : ((Al == 1) ? "Notice: Use memory features carefully in match!" : "Внимание: Используйте функции памяти с осторожностью!");
-                    ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "%s", warnMsg);
+                        ? "⚠️ OGOHLANTIRISH: Xotira funksiyalari (sakrash, tez yugurish, uchish) darhol 10 YIL BAN beradi! Ishlatmang." 
+                        : ((Al == 1) ? "⚠️ WARNING: Memory modifications cause immediate 10-YEAR BAN! Do not use." 
+                                     : "⚠️ ВНИМАНИЕ: Функции памяти вызывают немедленный БАН на 10 ЛЕТ! Не используйте.");
+                    ImGui::TextColored(ImVec4(1.0f, 0.25f, 0.25f, 1.0f), "%s", warnMsg);
 
                     const char* h_world = (Al == 0) ? "[ Ob-havo sozlamalari ]" : ((Al == 1) ? "[ Weather Environment ]" : "[ Погодные условия ]");
                     if (ImGui::CollapsingHeader(h_world)) {
@@ -12110,9 +12130,25 @@ void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float 
     }
     g_LocalPlayer = localPlayer;
 
+    // iPad View (Safe Client Camera FOV)
+    static bool s_lastWideView = false;
+    if (localPlayer && localPlayer->ThirdPersonCameraComponent) {
+        if (WideView) {
+            if (!localPlayer->bIsGunADS) {
+                *(float *) ((uintptr_t) &localPlayer->ThirdPersonCameraComponent->OrthoWidth - sizeof(float)) = (float)WideValue;
+            }
+            s_lastWideView = true;
+        } else if (s_lastWideView) {
+            *(float *) ((uintptr_t) &localPlayer->ThirdPersonCameraComponent->OrthoWidth - sizeof(float)) = 90.0f;
+            s_lastWideView = false;
+        }
+    }
+
     int localTeamID = localPlayer ? localPlayer->TeamID : -1;
     int totalEnemies = 0;
     int totalBots = 0;
+    bool hasDangerGrenade = false;
+    float dangerGrenadeDist = 999.0f;
 
     static const char* bonePairs[][2] = {
         {"Head", "neck_01"},
@@ -12151,7 +12187,7 @@ void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float 
             if (Config.ESPMenu.IgnoreBot && isBot) continue;
 
             float dist = localPlayer ? (localPlayer->GetDistanceTo(player) / 100.0f) : 0.0f;
-            if (dist > 380.0f) continue;
+            if (dist > g_espMaxDistance) continue;
 
             FVector headPos = player->GetBonePos("Head", {});
             if (headPos.X == 0 && headPos.Y == 0 && headPos.Z == 0) continue;
@@ -12292,7 +12328,7 @@ void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float 
             if (!vehicle->Mesh) continue;
 
             float vDist = localPlayer ? (localPlayer->GetDistanceTo(vehicle) / 100.0f) : 0.0f;
-            if (vDist > 500.0f) continue;
+            if (vDist > 600.0f) continue;
 
             FVector vLoc = vehicle->K2_GetActorLocation();
             FVector2D vSc;
@@ -12341,6 +12377,50 @@ void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float 
                 drawList->AddText(ImVec2(bScreen.x - bSize.x * 0.5f, bScreen.y), bCol, bBuf);
             }
         }
+
+        // ================= GRENADE / MOLOTOV / STUN WARNING =================
+        else if (GRWAR && actor->IsA(ASTExtraGrenadeBase::StaticClass())) {
+            auto grenade = (ASTExtraGrenadeBase*)actor;
+            int typeId = grenade->ItemDefineID.TypeSpecificID;
+            if (typeId != 602002) { // Skip smoke grenade
+                float gDist = localPlayer ? (localPlayer->GetDistanceTo(grenade) / 100.0f) : 0.0f;
+                if (gDist <= 150.0f) {
+                    FVector gLoc = grenade->K2_GetActorLocation();
+                    FVector2D gSc;
+                    if (UGameplayStatics::ProjectWorldToScreen(localPlayerController, gLoc, false, &gSc)) {
+                        ImVec2 gScreen(gSc.X / scale, gSc.Y / scale);
+                        const char* gName = (typeId == 602004) ? "MOLOTOV" : ((typeId == 602003) ? "STUN" : "GRENADE");
+                        char gBuf[64];
+                        snprintf(gBuf, sizeof(gBuf), "%s [%dM]", gName, (int)gDist);
+                        ImVec2 gSize = ImGui::CalcTextSize(gBuf);
+
+                        ImU32 circleCol = (typeId == 602004) ? IM_COL32(255, 120, 20, 240) : IM_COL32(255, 30, 30, 240);
+                        drawList->AddCircleFilled(gScreen, 6.0f, circleCol);
+                        drawList->AddCircle(gScreen, 8.0f, IM_COL32(255, 255, 255, 220), 0, 1.5f);
+
+                        drawList->AddText(ImVec2(gScreen.x - gSize.x * 0.5f + 1, gScreen.y + 10.0f), IM_COL32(0, 0, 0, 230), gBuf);
+                        drawList->AddText(ImVec2(gScreen.x - gSize.x * 0.5f, gScreen.y + 9.0f), IM_COL32(255, 235, 50, 255), gBuf);
+                    }
+
+                    if (gDist < 15.0f) {
+                        hasDangerGrenade = true;
+                        if (gDist < dangerGrenadeDist) dangerGrenadeDist = gDist;
+                    }
+                }
+            }
+        }
+    }
+
+    if (hasDangerGrenade) {
+        char gAlert[64];
+        snprintf(gAlert, sizeof(gAlert), "! DANGER: GRENADE [%dM] !", (int)dangerGrenadeDist);
+        ImVec2 alSize = ImGui::CalcTextSize(gAlert);
+        float alX = (displayW - alSize.x) * 0.5f;
+        float alY = displayH * 0.40f;
+        drawList->AddRectFilled(ImVec2(alX - 14, alY - 6), ImVec2(alX + alSize.x + 14, alY + alSize.y + 6), IM_COL32(220, 20, 20, 220), 6.0f);
+        drawList->AddRect(ImVec2(alX - 14, alY - 6), ImVec2(alX + alSize.x + 14, alY + alSize.y + 6), IM_COL32(255, 255, 255, 240), 6.0f, 0, 1.5f);
+        drawList->AddText(ImVec2(alX + 1, alY + 1), IM_COL32(0, 0, 0, 220), gAlert);
+        drawList->AddText(ImVec2(alX, alY), IM_COL32(255, 255, 255, 255), gAlert);
     }
 
     g_totalEnemies = totalEnemies;
