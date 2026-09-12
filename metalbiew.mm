@@ -18172,6 +18172,7 @@ ImGui::PopStyleColor();
             ImGui::RenderNotifications();
                 
         }
+    }
         
             
         ImGui::Render();
