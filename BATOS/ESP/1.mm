@@ -912,6 +912,7 @@ int autodiss()
     return Auto1.value;
 }
 
+bool MenDeal = false;
 
 @interface TouchMTKView : MTKView
 @property (nonatomic, weak) metalbiew *controller;
@@ -948,7 +949,6 @@ int autodiss()
 
 NSString *resultx;
 @implementation metalbiew
-bool MenDeal;
 
 - (MTKView *)mtkView
 {
@@ -10174,10 +10174,23 @@ ImGui::Checkbox("26", &preferences.FAMAS);
 
 - (void)updateIOWithTouchEvent:(UIEvent *)event
 {
-    UITouch *anyTouch = event.allTouches.anyObject;
-    CGPoint touchLocation = [anyTouch locationInView:self.view];
+    UITouch *activeTouch = nil;
+    for (UITouch *touch in event.allTouches)
+    {
+        if (touch.phase != UITouchPhaseEnded && touch.phase != UITouchPhaseCancelled)
+        {
+            activeTouch = touch;
+            break;
+        }
+    }
+    if (!activeTouch) {
+        activeTouch = event.allTouches.anyObject;
+    }
     ImGuiIO &io = ImGui::GetIO();
-    io.MousePos = ImVec2(touchLocation.x, touchLocation.y);
+    if (activeTouch) {
+        CGPoint touchLocation = [activeTouch locationInView:self.view];
+        io.MousePos = ImVec2(touchLocation.x, touchLocation.y);
+    }
     
     BOOL hasActiveTouch = NO;
     for (UITouch *touch in event.allTouches)
