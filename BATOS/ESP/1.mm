@@ -10228,7 +10228,7 @@ ImGui::Checkbox("26", &preferences.FAMAS);
                 }
             }
 
-            RenderMetalESP(drawList, io.DisplaySize.x, io.DisplaySize.y, (framebufferScale > 0.0f) ? framebufferScale : 1.0f);
+            RenderMetalESP(ImGui::GetBackgroundDrawList(), io.DisplaySize.x, io.DisplaySize.y, (framebufferScale > 0.0f) ? framebufferScale : 1.0f);
 
             ImGui::Render();
             ImDrawData* draw_data = ImGui::GetDrawData();
@@ -12003,11 +12003,13 @@ void ResetGuestAccount() {
 }
 
 static std::string FStringToString(const FString& fstr) {
-    if (!fstr.Data || fstr.Count <= 0 || fstr.Count > 128) return "";
+    if (!fstr.IsValid() || fstr.GetLength() <= 0 || fstr.GetLength() > 128) return "";
+    unsigned short* data = fstr.GetData();
+    if (!data) return "";
     std::string result;
-    result.reserve(fstr.Count);
-    for (int i = 0; i < fstr.Count; i++) {
-        char16_t c = fstr.Data[i];
+    result.reserve(fstr.GetLength());
+    for (int i = 0; i < fstr.GetLength(); i++) {
+        char16_t c = data[i];
         if (c == 0) break;
         if (c < 128) result += (char)c;
         else result += '?';
@@ -12082,9 +12084,9 @@ void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float 
     if (!GWorld || !GWorld->PersistentLevel) return;
 
     auto pActors = (TArray<AActor *> *)((uintptr_t) GWorld->PersistentLevel + 0xa0);
-    if (!pActors || !pActors->Data || pActors->Count <= 0 || pActors->Count > 8192) {
+    if (!pActors || !pActors->IsValid() || pActors->Num() <= 0 || pActors->Num() > 8192) {
         pActors = (TArray<AActor *> *)((uintptr_t) GWorld->PersistentLevel + 0x98);
-        if (!pActors || !pActors->Data || pActors->Count <= 0 || pActors->Count > 8192) return;
+        if (!pActors || !pActors->IsValid() || pActors->Num() <= 0 || pActors->Num() > 8192) return;
     }
 
     ASTExtraPlayerController* localPlayerController = nullptr;
@@ -12107,10 +12109,6 @@ void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float 
         localPlayer = (ASTExtraPlayerCharacter*)localPlayerController->AcknowledgedPawn;
     }
     g_LocalPlayer = localPlayer;
-
-    if (WideView && localPlayer && localPlayer->ThirdPersonCameraComponent) {
-        localPlayer->ThirdPersonCameraComponent->FieldOfView = (float)WideValue;
-    }
 
     int localTeamID = localPlayer ? localPlayer->TeamID : -1;
     int totalEnemies = 0;
@@ -12136,9 +12134,9 @@ void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float 
         {"calf_r", "foot_r"}
     };
 
-    const int numActors = pActors->Count;
+    const int numActors = pActors->Num();
     for (int i = 0; i < numActors; i++) {
-        AActor* actor = pActors->Data[i];
+        AActor* actor = (*pActors)[i];
         if (!actor) continue;
 
         // ================= PLAYERS =================
