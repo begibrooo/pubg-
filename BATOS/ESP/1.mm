@@ -10155,63 +10155,74 @@ ImGui::Checkbox("26", &preferences.FAMAS);
                 ImGui::PopStyleColor(1);
             }
 
-            // ===== VIP ENEMY COUNTER PILL HUD =====
+            // ===== ULTRA VIP ENEMY COUNTER PILL HUD =====
             if (Config.ESPMenu.EnemyCount) {
                 int64_t now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
                 int64_t last_ms = g_lastESPUpdateTimeMs.load();
                 if (last_ms > 0 && (now_ms - last_ms) < 2500) {
                     ImDrawList* drawList = ImGui::GetForegroundDrawList();
-                    char buf[64];
-                    ImU32 bgColor = IM_COL32(14, 16, 22, 215);
-                    ImU32 borderColor;
-                    ImU32 dotColor;
                     int curEnemies = g_totalEnemies.load();
                     int curBots = g_totalBots.load();
 
+                    char buf[128];
+                    ImU32 borderColor;
+                    ImU32 dotColor;
+                    ImU32 textColor = IM_COL32(250, 250, 252, 255);
+
                     if (curEnemies > 0) {
-                        snprintf(buf, sizeof(buf), "ENEMIES: %d  |  BOTS: %d", curEnemies, curBots);
-                        borderColor = IM_COL32(255, 60, 75, 240); // Crimson red alert
-                        dotColor = IM_COL32(255, 50, 65, 255);
+                        if (curBots > 0) {
+                            snprintf(buf, sizeof(buf), ICON_FA_SKULL "  %d Player%s    " ICON_FA_ROBOT "  %d Bot%s", 
+                                     curEnemies, curEnemies > 1 ? "s" : "",
+                                     curBots, curBots > 1 ? "s" : "");
+                        } else {
+                            snprintf(buf, sizeof(buf), ICON_FA_SKULL "  %d Player%s Nearby", 
+                                     curEnemies, curEnemies > 1 ? "s" : "");
+                        }
+                        borderColor = IM_COL32(255, 60, 75, 235); // Vivid Crimson Alert
+                        dotColor = IM_COL32(255, 45, 60, 255);
                     } else if (curBots > 0) {
-                        snprintf(buf, sizeof(buf), "BOTS ONLY: %d", curBots);
-                        borderColor = IM_COL32(255, 175, 40, 240); // Amber warning
+                        snprintf(buf, sizeof(buf), ICON_FA_ROBOT "  %d Bot%s  (Area Clear)", curBots, curBots > 1 ? "s" : "");
+                        borderColor = IM_COL32(255, 175, 40, 220); // Warm Amber Alert
                         dotColor = IM_COL32(255, 165, 30, 255);
                     } else {
-                        snprintf(buf, sizeof(buf), "SAFE (0 ENEMIES)");
-                        borderColor = IM_COL32(46, 213, 115, 230); // Emerald safe
+                        snprintf(buf, sizeof(buf), ICON_FA_SHIELD "  Safe Area");
+                        borderColor = IM_COL32(46, 213, 115, 210); // Emerald Green
                         dotColor = IM_COL32(46, 213, 115, 255);
                     }
 
                     ImVec2 textSize = ImGui::CalcTextSize(buf);
-                    float padX = 14.0f;
-                    float padY = 6.0f;
+                    float padX = 16.0f;
+                    float padY = 7.0f;
                     float dotRadius = 4.0f;
-                    float dotGap = 8.0f;
+                    float dotGap = 9.0f;
                     float totalW = textSize.x + padX * 2.0f + (dotRadius * 2.0f + dotGap);
                     float totalH = textSize.y + padY * 2.0f;
 
                     float centerX = io.DisplaySize.x * 0.5f;
-                    float posY = 36.0f;
+                    float posY = 22.0f; // Sleek placement right below island/notch
                     ImVec2 pMin(centerX - totalW * 0.5f, posY);
                     ImVec2 pMax(centerX + totalW * 0.5f, posY + totalH);
+                    float rounding = totalH * 0.5f; // Perfect capsule shape
 
-                    // 1. Soft drop shadow
-                    drawList->AddRectFilled(ImVec2(pMin.x + 2.0f, pMin.y + 2.0f), ImVec2(pMax.x + 2.0f, pMax.y + 2.0f), IM_COL32(0, 0, 0, 90), 12.0f);
-                    // 2. Translucent dark glass pill
-                    drawList->AddRectFilled(pMin, pMax, bgColor, 12.0f);
-                    // 3. Glowing colored outline
-                    drawList->AddRect(pMin, pMax, borderColor, 12.0f, 0, 1.5f);
+                    // 1. Soft dark drop shadow
+                    drawList->AddRectFilled(ImVec2(pMin.x + 2.0f, pMin.y + 3.0f), ImVec2(pMax.x + 2.0f, pMax.y + 3.0f), IM_COL32(0, 0, 0, 110), rounding);
+                    // 2. Obsidian Glass Capsule Background
+                    drawList->AddRectFilled(pMin, pMax, IM_COL32(11, 13, 18, 230), rounding);
+                    // 3. Crisp neon outline border
+                    drawList->AddRect(pMin, pMax, borderColor, rounding, 0, 1.5f);
 
-                    // 4. Indicator dot + glow
+                    // 4. Radar pulsing glow dot
+                    float pulse = (sinf((float)ImGui::GetTime() * 4.5f) + 1.0f) * 0.5f;
                     float dotX = pMin.x + padX + dotRadius;
                     float dotY = pMin.y + totalH * 0.5f;
+                    float glowRadius = dotRadius + 1.0f + pulse * 2.5f;
+                    drawList->AddCircleFilled(ImVec2(dotX, dotY), glowRadius, IM_COL32((dotColor >> 0) & 0xFF, (dotColor >> 8) & 0xFF, (dotColor >> 16) & 0xFF, (int)(75 * (1.0f - pulse))));
                     drawList->AddCircleFilled(ImVec2(dotX, dotY), dotRadius, dotColor);
-                    drawList->AddCircle(ImVec2(dotX, dotY), dotRadius + 1.5f, IM_COL32(255, 255, 255, 50), 12, 1.0f);
 
-                    // 5. Crisp label text
+                    // 5. Crisp high-res text with icon
                     float textX = dotX + dotRadius + dotGap;
                     float textY = pMin.y + padY;
-                    drawList->AddText(ImVec2(textX, textY), IM_COL32(245, 245, 250, 255), buf);
+                    drawList->AddText(ImVec2(textX, textY), textColor, buf);
                 }
             }
 
@@ -19148,21 +19159,6 @@ UGameplayStatics* gGameplayStatics = (UGameplayStatics*)UGameplayStatics::Static
     g_totalEnemies = totalEnemies;
     g_totalBots = totalBots;
     g_lastESPUpdateTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
-
-    if (Config.ESPMenu.EnemyCount) {
-        if (totalEnemies > 0 || totalBots > 0) {
-            std::wstring numi = L"Players [ " + std::to_wstring(totalEnemies) +
-                                L" ]  Bots [ " + std::to_wstring(totalBots) + L" ] ";
-            tslFont->LegacyFontSize = 18;
-            DrawTextcan(HUD, FString(numi.c_str()), {(float) screenWidth / 2, 85},
-                        红色, COLOR_BLACK);
-        } else {
-            std::wstring numi = L"[ SAFE ]";
-            tslFont->LegacyFontSize = 18;
-            DrawTextcan(HUD, FString(numi.c_str()), {(float) screenWidth / 2, 85},
-                        绿色, COLOR_BLACK);
-        }
-    }
 // 构造显示文本
 
 if(载具){
