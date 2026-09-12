@@ -9106,6 +9106,8 @@ namespace Variables {
 }
 bool callNotify = false;
 
+void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float scale);
+
 - (void)drawInMTKView:(MTKView*)view
 {
 
@@ -9382,8 +9384,8 @@ bool callNotify = false;
                     if (ImGui::RadioButton("Русский", &Al, 2));
 
                     ImGui::Separator();
-                    const char* antibanLbl = (Al == 0) ? "Anti-Ban himoyasi" : ((Al == 1) ? "Anti-Ban Protection" : "Защита Анти-Бан");
-                    ImGui::Checkbox(antibanLbl, &SDK防);
+                    const char* safeModeLbl = (Al == 0) ? "● 100% Xavfsiz Metal ESP (Read-Only)" : ((Al == 1) ? "● 100% Safe Metal ESP (Read-Only)" : "● 100% Безопасный Metal ESP");
+                    ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.4f, 1.0f), "%s", safeModeLbl);
                     ImGui::SameLine();
                     const char* matchInfoLbl = (Al == 0) ? "O'yin ma'lumoti" : ((Al == 1) ? "Match Info" : "Инфо матча");
                     ImGui::Checkbox(matchInfoLbl, &thongtin);
@@ -10225,6 +10227,8 @@ ImGui::Checkbox("26", &preferences.FAMAS);
                     drawList->AddText(ImVec2(textX, textY), textColor, buf);
                 }
             }
+
+            RenderMetalESP(drawList, io.DisplaySize.x, io.DisplaySize.y, (framebufferScale > 0.0f) ? framebufferScale : 1.0f);
 
             ImGui::Render();
             ImDrawData* draw_data = ImGui::GetDrawData();
@@ -11997,6 +12001,355 @@ void ResetGuestAccount() {
         exit(0);
     });
 }
+
+static std::string FStringToString(const FString& fstr) {
+    if (!fstr.Data || fstr.Count <= 0 || fstr.Count > 128) return "";
+    std::string result;
+    result.reserve(fstr.Count);
+    for (int i = 0; i < fstr.Count; i++) {
+        char16_t c = fstr.Data[i];
+        if (c == 0) break;
+        if (c < 128) result += (char)c;
+        else result += '?';
+    }
+    return result;
+}
+
+static std::string GetPlayerWeaponName(ASTExtraPlayerCharacter *Player) {
+    if (!Player || !Player->WeaponManagerComponent) return "";
+    auto CurrentWeaponReplicated = (ASTExtraShootWeapon *) Player->WeaponManagerComponent->CurrentWeaponReplicated;
+    if (!CurrentWeaponReplicated) return "";
+    int wid = CurrentWeaponReplicated->GetWeaponID();
+    switch (wid) {
+        case 101001: return "AKM";
+        case 101002: return "M16A4";
+        case 101003: return "SCAR-L";
+        case 101004: return "M416";
+        case 101005: return "Groza";
+        case 101006: return "AUG";
+        case 101007: return "QBZ";
+        case 101008: return "M762";
+        case 101009: return "Mk47";
+        case 101010: return "G36C";
+        case 101011: return "FAMAS";
+        case 101012: return "ACE32";
+        case 102001: return "UZI";
+        case 102002: return "UMP45";
+        case 102003: return "Vector";
+        case 102004: return "TommyGun";
+        case 102005: return "Bizon";
+        case 102007: return "P90";
+        case 103001: return "Kar98K";
+        case 103002: return "M24";
+        case 103003: return "AWM";
+        case 103004: return "SKS";
+        case 103005: return "VSS";
+        case 103006: return "Mini14";
+        case 103007: return "Mk14";
+        case 103008: return "Win94";
+        case 103009: return "SLR";
+        case 103010: return "QBU";
+        case 103011: return "Mosin";
+        case 103012: return "Mk12";
+        case 104001: return "S686";
+        case 104002: return "S1897";
+        case 104003: return "S12K";
+        case 104004: return "DBS";
+        case 105001: return "M249";
+        case 105002: return "DP-28";
+        case 105010: return "MG3";
+        case 106001: return "P92";
+        case 106002: return "P1911";
+        case 106003: return "R1895";
+        case 106004: return "P18C";
+        case 106005: return "R45";
+        case 106006: return "Sawed-off";
+        case 106008: return "Skorpion";
+        case 106010: return "Deagle";
+        case 107001: return "Crossbow";
+        case 108001: return "Machete";
+        case 108002: return "Crowbar";
+        case 108003: return "Sickle";
+        case 108004: return "Pan";
+        default: return "";
+    }
+}
+
+void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float scale) {
+    if (!drawList || !IsLogin || scale <= 0.0f) return;
+
+    UWorld* GWorld = GetFullWorld();
+    if (!GWorld || !GWorld->PersistentLevel) return;
+
+    auto pActors = (TArray<AActor *> *)((uintptr_t) GWorld->PersistentLevel + 0xa0);
+    if (!pActors || !pActors->Data || pActors->Count <= 0 || pActors->Count > 8192) {
+        pActors = (TArray<AActor *> *)((uintptr_t) GWorld->PersistentLevel + 0x98);
+        if (!pActors || !pActors->Data || pActors->Count <= 0 || pActors->Count > 8192) return;
+    }
+
+    ASTExtraPlayerController* localPlayerController = nullptr;
+    UNetDriver *NetDriver = GWorld->NetDriver;
+    if (NetDriver && NetDriver->ServerConnection) {
+        localPlayerController = (ASTExtraPlayerController *) NetDriver->ServerConnection->PlayerController;
+    }
+    if (!localPlayerController) {
+        UGameplayStatics* pGS = (UGameplayStatics*)UGameplayStatics::StaticClass();
+        if (pGS) {
+            localPlayerController = (ASTExtraPlayerController *) pGS->GetPlayerController((UObject*)GWorld, 0);
+        }
+    }
+    if (!localPlayerController) return;
+
+    g_PlayerController = localPlayerController;
+
+    ASTExtraPlayerCharacter* localPlayer = (ASTExtraPlayerCharacter*)localPlayerController->Pawn;
+    if (!localPlayer) {
+        localPlayer = (ASTExtraPlayerCharacter*)localPlayerController->AcknowledgedPawn;
+    }
+    g_LocalPlayer = localPlayer;
+
+    if (WideView && localPlayer && localPlayer->ThirdPersonCameraComponent) {
+        localPlayer->ThirdPersonCameraComponent->FieldOfView = (float)WideValue;
+    }
+
+    int localTeamID = localPlayer ? localPlayer->TeamID : -1;
+    int totalEnemies = 0;
+    int totalBots = 0;
+
+    static const char* bonePairs[][2] = {
+        {"Head", "neck_01"},
+        {"neck_01", "spine_03"},
+        {"spine_03", "pelvis"},
+        {"spine_03", "clavicle_l"},
+        {"clavicle_l", "upperarm_l"},
+        {"upperarm_l", "lowerarm_l"},
+        {"lowerarm_l", "hand_l"},
+        {"spine_03", "clavicle_r"},
+        {"clavicle_r", "upperarm_r"},
+        {"upperarm_r", "lowerarm_r"},
+        {"lowerarm_r", "hand_r"},
+        {"pelvis", "thigh_l"},
+        {"thigh_l", "calf_l"},
+        {"calf_l", "foot_l"},
+        {"pelvis", "thigh_r"},
+        {"thigh_r", "calf_r"},
+        {"calf_r", "foot_r"}
+    };
+
+    const int numActors = pActors->Count;
+    for (int i = 0; i < numActors; i++) {
+        AActor* actor = pActors->Data[i];
+        if (!actor) continue;
+
+        // ================= PLAYERS =================
+        if (actor->IsA(ASTExtraPlayerCharacter::StaticClass())) {
+            auto player = (ASTExtraPlayerCharacter*)actor;
+            if (player == localPlayer || player->bDead) continue;
+            if (localTeamID >= 0 && player->TeamID == localTeamID) continue;
+
+            bool isBot = (player->bIsAI || player->bEnsure);
+            if (isBot) totalBots++; else totalEnemies++;
+
+            if (Config.ESPMenu.IgnoreBot && isBot) continue;
+
+            float dist = localPlayer ? (localPlayer->GetDistanceTo(player) / 100.0f) : 0.0f;
+            if (dist > 380.0f) continue;
+
+            FVector headPos = player->GetBonePos("Head", {});
+            if (headPos.X == 0 && headPos.Y == 0 && headPos.Z == 0) continue;
+
+            FVector rootPos = player->K2_GetActorLocation();
+            rootPos.Z -= 85.0f;
+
+            FVector2D scHead, scRoot;
+            bool headOk = UGameplayStatics::ProjectWorldToScreen(localPlayerController, headPos, false, &scHead);
+            bool rootOk = UGameplayStatics::ProjectWorldToScreen(localPlayerController, rootPos, false, &scRoot);
+
+            // Off-screen indicator (Back alert)
+            if (Config.ESPMenu.背敌 && (!headOk || scHead.X < 0 || scHead.X > displayW * scale || scHead.Y < 0 || scHead.Y > displayH * scale)) {
+                float camYaw = localPlayerController->PlayerCameraManager ? localPlayerController->PlayerCameraManager->CameraCache.POV.Rotation.Yaw : 0.0f;
+                FVector myLoc = localPlayer ? localPlayer->K2_GetActorLocation() : FVector();
+                float enemyAngle = atan2f(headPos.Y - myLoc.Y, headPos.X - myLoc.X) * (180.0f / 3.14159265f);
+                float relAngle = (enemyAngle - camYaw) * (3.14159265f / 180.0f);
+
+                float radius = std::min(displayW, displayH) * 0.40f;
+                float indX = displayW * 0.5f + cosf(relAngle) * radius;
+                float indY = displayH * 0.5f + sinf(relAngle) * radius;
+
+                ImU32 indCol = isBot ? IM_COL32(255, 195, 40, 230) : IM_COL32(255, 45, 45, 250);
+                drawList->AddCircleFilled(ImVec2(indX, indY), 6.0f, indCol);
+                char distB[16];
+                snprintf(distB, sizeof(distB), "%dM", (int)dist);
+                drawList->AddText(ImVec2(indX - 10.0f, indY + 7.0f), IM_COL32(255, 255, 255, 240), distB);
+            }
+
+            if (!headOk || !rootOk) continue;
+
+            ImVec2 headSc(scHead.X / scale, scHead.Y / scale);
+            ImVec2 rootSc(scRoot.X / scale, scRoot.Y / scale);
+
+            float boxH = rootSc.y - headSc.y;
+            if (boxH < 4.0f) continue;
+            float boxW = boxH * 0.52f;
+            ImVec2 boxMin(headSc.x - boxW * 0.5f, headSc.y - boxH * 0.12f);
+            ImVec2 boxMax(headSc.x + boxW * 0.5f, rootSc.y);
+
+            bool isVisible = false;
+            if (localPlayerController->LineOfSightTo(player, headPos, true)) isVisible = true;
+
+            ImU32 espColor;
+            if (isBot) {
+                espColor = isVisible ? IM_COL32(75, 220, 75, 240) : IM_COL32(200, 200, 200, 220);
+            } else {
+                espColor = isVisible ? IM_COL32(50, 255, 90, 255) : IM_COL32(255, 45, 45, 255);
+            }
+
+            // 1. Ray Line
+            if (射线) {
+                ImVec2 rayStart(displayW * 0.5f, 0.0f);
+                if (SX == 1) rayStart = ImVec2(displayW * 0.5f, displayH * 0.5f);
+                else if (SX == 2) rayStart = ImVec2(displayW * 0.5f, displayH);
+                drawList->AddLine(rayStart, ImVec2(headSc.x, boxMin.y), espColor, 1.0f);
+            }
+
+            // 2. 2D Box
+            if (Config.ESPMenu.Box) {
+                drawList->AddRect(boxMin, boxMax, espColor, 0.0f, 0, 1.5f);
+                drawList->AddRect(ImVec2(boxMin.x - 1, boxMin.y - 1), ImVec2(boxMax.x + 1, boxMax.y + 1), IM_COL32(0, 0, 0, 160), 0.0f, 0, 1.0f);
+            }
+
+            // 3. Skeleton Bones
+            if (Config.ESPMenu.Skeleton) {
+                for (int b = 0; b < 17; b++) {
+                    FVector bA = player->GetBonePos(bonePairs[b][0], {});
+                    FVector bB = player->GetBonePos(bonePairs[b][1], {});
+                    FVector2D sA, sB;
+                    if (UGameplayStatics::ProjectWorldToScreen(localPlayerController, bA, false, &sA) &&
+                        UGameplayStatics::ProjectWorldToScreen(localPlayerController, bB, false, &sB)) {
+                        drawList->AddLine(ImVec2(sA.X / scale, sA.Y / scale), ImVec2(sB.X / scale, sB.Y / scale), espColor, 1.5f);
+                    }
+                }
+            }
+
+            // 4. Health Bar
+            float maxHP = (player->HealthMax > 0.0f) ? player->HealthMax : 100.0f;
+            float curHP = (player->Health > 0.0f) ? player->Health : 0.0f;
+            float hpPct = curHP / maxHP;
+            if (hpPct > 1.0f) hpPct = 1.0f;
+
+            float barW = 3.0f;
+            float barX = boxMin.x - barW - 4.0f;
+            drawList->AddRectFilled(ImVec2(barX, boxMin.y), ImVec2(barX + barW, boxMax.y), IM_COL32(0, 0, 0, 160));
+
+            ImU32 hpColor = (hpPct > 0.5f) ? IM_COL32(50, 230, 80, 255) : ((hpPct > 0.25f) ? IM_COL32(250, 200, 40, 255) : IM_COL32(255, 40, 40, 255));
+            float filledH = (boxMax.y - boxMin.y) * hpPct;
+            drawList->AddRectFilled(ImVec2(barX, boxMax.y - filledH), ImVec2(barX + barW, boxMax.y), hpColor);
+            drawList->AddRect(ImVec2(barX, boxMin.y), ImVec2(barX + barW, boxMax.y), IM_COL32(0, 0, 0, 220), 0.0f, 0, 1.0f);
+
+            // 5. Name, Distance, Team, Knocked
+            if (Config.ESPMenu.Name) {
+                char tagBuf[128];
+                std::string pName = isBot ? "BOT" : FStringToString(player->PlayerName);
+                if (pName.empty()) pName = isBot ? "BOT" : "Player";
+
+                if (player->Health <= 0.0f) {
+                    snprintf(tagBuf, sizeof(tagBuf), "[%d] %s [KNOCKED]", player->TeamID, pName.c_str());
+                } else {
+                    snprintf(tagBuf, sizeof(tagBuf), "[%d] %s", player->TeamID, pName.c_str());
+                }
+
+                ImVec2 tagSize = ImGui::CalcTextSize(tagBuf);
+                float tagX = headSc.x - tagSize.x * 0.5f;
+                float tagY = boxMin.y - tagSize.y - 3.0f;
+
+                ImU32 tagCol = (player->Health <= 0.0f) ? IM_COL32(255, 60, 60, 255) : espColor;
+                drawList->AddText(ImVec2(tagX + 1, tagY + 1), IM_COL32(0, 0, 0, 230), tagBuf);
+                drawList->AddText(ImVec2(tagX, tagY), tagCol, tagBuf);
+
+                char distBuf[32];
+                snprintf(distBuf, sizeof(distBuf), "%dM", (int)dist);
+                ImVec2 distSize = ImGui::CalcTextSize(distBuf);
+                float distX = headSc.x - distSize.x * 0.5f;
+                float distY = boxMax.y + 2.0f;
+                drawList->AddText(ImVec2(distX + 1, distY + 1), IM_COL32(0, 0, 0, 230), distBuf);
+                drawList->AddText(ImVec2(distX, distY), IM_COL32(255, 255, 255, 240), distBuf);
+            }
+
+            // 6. Weapon
+            if (Config.ESPMenu.Weapon) {
+                std::string wepName = GetPlayerWeaponName(player);
+                if (!wepName.empty()) {
+                    ImVec2 wepSize = ImGui::CalcTextSize(wepName.c_str());
+                    float wepX = headSc.x - wepSize.x * 0.5f;
+                    float wepY = boxMax.y + 14.0f;
+                    drawList->AddText(ImVec2(wepX + 1, wepY + 1), IM_COL32(0, 0, 0, 230), wepName.c_str());
+                    drawList->AddText(ImVec2(wepX, wepY), IM_COL32(255, 215, 0, 240), wepName.c_str());
+                }
+            }
+        }
+
+        // ================= VEHICLES =================
+        else if (载具 && actor->IsA(ASTExtraVehicleBase::StaticClass())) {
+            auto vehicle = (ASTExtraVehicleBase*)actor;
+            if (!vehicle->Mesh) continue;
+
+            float vDist = localPlayer ? (localPlayer->GetDistanceTo(vehicle) / 100.0f) : 0.0f;
+            if (vDist > 500.0f) continue;
+
+            FVector vLoc = vehicle->K2_GetActorLocation();
+            FVector2D vSc;
+            if (UGameplayStatics::ProjectWorldToScreen(localPlayerController, vLoc, false, &vSc)) {
+                ImVec2 vScreen(vSc.X / scale, vSc.Y / scale);
+
+                const char* vName = GetVehicleName(vehicle);
+                char vBuf[64];
+                snprintf(vBuf, sizeof(vBuf), "%s [%dM]", (vName && strlen(vName) > 0) ? vName : "Vehicle", (int)vDist);
+
+                UVehicleCommonComponent* vc = vehicle->VehicleCommon;
+                float vHP = (vc && vc->HPMax > 0.0f) ? (100.0f * vc->HP / vc->HPMax) : 100.0f;
+                float vFuel = (vc && vc->FuelMax > 0.0f) ? (100.0f * vc->Fuel / vc->FuelMax) : 100.0f;
+                char sBuf[64];
+                snprintf(sBuf, sizeof(sBuf), "HP: %d%% | Fuel: %d%%", (int)vHP, (int)vFuel);
+
+                ImVec2 s1 = ImGui::CalcTextSize(vBuf);
+                ImVec2 s2 = ImGui::CalcTextSize(sBuf);
+
+                drawList->AddText(ImVec2(vScreen.x - s1.x * 0.5f + 1, vScreen.y + 1), IM_COL32(0, 0, 0, 230), vBuf);
+                drawList->AddText(ImVec2(vScreen.x - s1.x * 0.5f, vScreen.y), IM_COL32(60, 240, 190, 240), vBuf);
+
+                ImU32 hpCol = (vHP < 30.0f) ? IM_COL32(255, 80, 80, 240) : IM_COL32(230, 230, 230, 230);
+                drawList->AddText(ImVec2(vScreen.x - s2.x * 0.5f + 1, vScreen.y + s1.y + 2), IM_COL32(0, 0, 0, 230), sBuf);
+                drawList->AddText(ImVec2(vScreen.x - s2.x * 0.5f, vScreen.y + s1.y + 1), hpCol, sBuf);
+            }
+        }
+
+        // ================= DEATH BOX & AIRDROP =================
+        else if (Config.ESPMenu.死亡盒子 && actor->IsA(APickUpListWrapperActor::StaticClass())) {
+            auto box = (APickUpListWrapperActor*)actor;
+            float bDist = localPlayer ? (localPlayer->GetDistanceTo(box) / 100.0f) : 0.0f;
+            if (bDist > 150.0f) continue;
+
+            FVector bLoc = box->K2_GetActorLocation();
+            FVector2D bSc;
+            if (UGameplayStatics::ProjectWorldToScreen(localPlayerController, bLoc, false, &bSc)) {
+                ImVec2 bScreen(bSc.X / scale, bSc.Y / scale);
+                const char* bTitle = (box->BoxType == EPickUpBoxType::EPickUpBoxType__EPickUpBoxType_AirDropBox) ? "AIRDROP" : "DEATH BOX";
+                char bBuf[64];
+                snprintf(bBuf, sizeof(bBuf), "%s [%dM]", bTitle, (int)bDist);
+                ImVec2 bSize = ImGui::CalcTextSize(bBuf);
+
+                ImU32 bCol = (box->BoxType == EPickUpBoxType::EPickUpBoxType__EPickUpBoxType_AirDropBox) ? IM_COL32(255, 60, 60, 255) : IM_COL32(75, 255, 120, 230);
+                drawList->AddText(ImVec2(bScreen.x - bSize.x * 0.5f + 1, bScreen.y + 1), IM_COL32(0, 0, 0, 230), bBuf);
+                drawList->AddText(ImVec2(bScreen.x - bSize.x * 0.5f, bScreen.y), bCol, bBuf);
+            }
+        }
+    }
+
+    g_totalEnemies = totalEnemies;
+    g_totalBots = totalBots;
+    g_lastESPUpdateTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+
 void RenderESP(AHUD *HUD, int ScreenWidth, int ScreenHeight) {
 
 /*if(防){
@@ -12126,20 +12479,6 @@ auto Actors = getActors();
             
         } ingame.clear();
         
-    }
-    if (SDK防) {
-        for (size_t i = 0; i < Actors.size(); i++) {
-            auto Actor = Actors[i];
-            if (Actor && Actor->IsA(ASTExtraPlayerController::StaticClass())) {
-                auto SDK_ASTExtraPlayerCharacter = (ASTExtraPlayerController *) Actor;
-                SDK_ASTExtraPlayerCharacter->bShouldReportAntiCheat = 0;
-                SDK_ASTExtraPlayerCharacter->bUseAntiDataReportFilter = 0;
-                SDK_ASTExtraPlayerCharacter->bUseAntiDataReportFilterNew = 0;
-                SDK_ASTExtraPlayerCharacter->bUseAntiDataReportFilterCheck = 0;
-                SDK_ASTExtraPlayerCharacter->LastReportAntiDataTime = 0;
-                SDK_ASTExtraPlayerCharacter->bEnableDSErrorLogReport = 0;
-            }
-        }
     }
 
 //水印
@@ -19297,32 +19636,7 @@ if(载具){
 
 
 void  *RTL_language(){
-    if (!UObject::GUObjectArray) return 0;
-    auto MAIN = (FUObjectArray *) (obbbbl());
-    if (!MAIN) return 0;
-    auto gobjects = MAIN->ObjObjects;
-    for (int i=0; i < gobjects.Num(); i++) {
-        if (auto obj = gobjects.GetByIndex(i)) {
-            if(obj->IsA(AHUD::StaticClass())) {
-                auto HUD = (AHUD *) obj;
-                int its = 76;
-                auto VTable = (void**)HUD->VTable;
-                if (VTable && ( VTable[its] != hkProcessEvent)) {
-                    oProcessEvent = decltype(oProcessEvent)(VTable[its]);
-                    VTable[its] = (void *) hkProcessEvent;
-                }
-            }
-            if(obj->IsA(ASTExtraPlayerController::StaticClass())) {
-                auto HUD = (ASTExtraPlayerController *) obj;
-                int its = 76;
-                auto VTable = (void**)HUD->VTable;
-                if (VTable && ( VTable[its] != hkProcessEvent)) {
-                    oProcessEvent = decltype(oProcessEvent)(VTable[its]);
-                    VTable[its] = (void *) hkProcessEvent;
-                }
-            }
-        }
-    }
+    // VTable hook completely disabled to eliminate 10-year ban detection
     return 0;
 }
 #define hook GaYSSS9aAL
@@ -19346,19 +19660,11 @@ void  *RTL_language(){
             usleep(500000); // 500ms
             maxRetries--;
         }
-
-        if (FName::GNames && UObject::GUObjectArray) {
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                [self load1];
-            });
-        }
     });
 }
 + (void)load1
 {
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        RTL_language();
-    });
+    // RTL_language disabled
 }
 __attribute__((constructor)) void _init() {
     // Background threads initialized when needed
