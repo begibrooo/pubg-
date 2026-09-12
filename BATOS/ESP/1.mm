@@ -11905,6 +11905,24 @@ break;
 case ESTExtraVehicleShapeType::ESTExtraVehicleShapeType__VST_WingMan:
 return "Helicopter";
 break;
+case ESTExtraVehicleShapeType::ESTExtraVehicleShapeType__VST_Motorglider:
+return "Motor Glider";
+break;
+case ESTExtraVehicleShapeType::ESTExtraVehicleShapeType__VST_Bike:
+case ESTExtraVehicleShapeType::ESTExtraVehicleShapeType__VST_Bike_WithRack:
+return "Bicycle";
+break;
+case ESTExtraVehicleShapeType::ESTExtraVehicleShapeType__VST_ATV:
+return "ATV";
+break;
+case ESTExtraVehicleShapeType::ESTExtraVehicleShapeType__VST_ModelY:
+return "Tesla";
+break;
+case ESTExtraVehicleShapeType::ESTExtraVehicleShapeType__VST_MediumTank:
+case ESTExtraVehicleShapeType::ESTExtraVehicleShapeType__VST_LightTank:
+case ESTExtraVehicleShapeType::ESTExtraVehicleShapeType__VST_HeavyTank:
+return "Tank";
+break;
 default:
 return "Vehicle";
 break;
@@ -18936,7 +18954,7 @@ float txtWidth, txtHeight;
                         if (Config.ESPMenu.Name  && IsLogin)
                     {
                         robotoFont->LegacyFontSize = 12.f;
-                        std::wstring knockedstr = L"[倒地]";
+                        std::wstring knockedstr = L"[KNOCKED]";
 
                               
                         
@@ -19166,16 +19184,18 @@ if(载具){
     GetAllActors(ITS);
     for(auto actor = ITS.begin(); actor != ITS.end(); actor++){
         auto Vehicle = *actor;
-        if(!Vehicle->Mesh)
+        if(!Vehicle || !Vehicle->Mesh)
             continue;
 
-        auto vv = Vehicle->VehicleShapeType;
         float Distance = 0.f;
         if (localPlayer) {
             Distance = Vehicle->GetDistanceTo(localPlayer) / 100.f;
         } else if (localPlayerController && localPlayerController->PlayerCameraManager) {
             Distance = CalcVectorDist(localPlayerController->PlayerCameraManager->CameraCache.POV.Location, Vehicle->K2_GetActorLocation()) / 100.f;
         }
+
+        if (Distance > 600.f)
+            continue;
 
         FVector2D vehiclePos;
         auto ROOT = Vehicle->K2_GetActorLocation();
@@ -19184,23 +19204,31 @@ if(载具){
         if(UGameplayStatics::ProjectWorldToScreen(localPlayerController, ROOT, true, &vehiclePos)){
             UVehicleCommonComponent* VehicleCommon = Vehicle->VehicleCommon;
 
-            float VehicleHP = 100 * VehicleCommon->HP / VehicleCommon->HPMax;
-            float VehicleFuel = 100 * VehicleCommon->Fuel / VehicleCommon->FuelMax;
+            float VehicleHP = 100.0f;
+            float VehicleFuel = 100.0f;
+            if (VehicleCommon && VehicleCommon->HPMax > 0.0f) {
+                VehicleHP = 100.0f * VehicleCommon->HP / VehicleCommon->HPMax;
+            }
+            if (VehicleCommon && VehicleCommon->FuelMax > 0.0f) {
+                VehicleFuel = 100.0f * VehicleCommon->Fuel / VehicleCommon->FuelMax;
+            }
 
-            std::wstring VehicleHPstr = L"血量: " + std::to_wstring((int)VehicleHP);
-            std::wstring VehicleFuelstr = L"油量: " + std::to_wstring((int)VehicleFuel);
-            std::wstring VehicleDiststr = L"距离: " + std::to_wstring((int)Distance);
+            const char *rawVehName = GetVehicleName(Vehicle);
+            std::string vNameStr = (rawVehName && strlen(rawVehName) > 0) ? rawVehName : "Vehicle";
+            std::wstring vNameW(vNameStr.begin(), vNameStr.end());
 
-            tslFont->LegacyFontSize = 10;
+            std::wstring VehicleHeader = vNameW + L" [" + std::to_wstring((int)Distance) + L"M]";
+            std::wstring VehicleStats = L"HP: " + std::to_wstring((int)VehicleHP) + L"% | Fuel: " + std::to_wstring((int)VehicleFuel) + L"%";
 
-            DrawOutlinedText(HUD, VehicleHPstr, FVector2D(vehiclePos.X, vehiclePos.Y),
-                FLinearColor(1.f,1.f,1.f,1.f), FLinearColor(0.f,0.f,0.f,1.f), true);
+            robotoFont->LegacyFontSize = 10.0f;
 
-            DrawOutlinedText(HUD, VehicleFuelstr, FVector2D(vehiclePos.X, vehiclePos.Y + 12),
-                FLinearColor(1.f,1.f,1.f,1.f), FLinearColor(0.f,0.f,0.f,1.f), true);
+            DrawOutlinedText(HUD, VehicleHeader, FVector2D(vehiclePos.X, vehiclePos.Y),
+                FLinearColor(0.2f, 0.95f, 0.7f, 1.0f), COLOR_BLACK, true);
 
-            DrawOutlinedText(HUD, VehicleDiststr, FVector2D(vehiclePos.X, vehiclePos.Y + 24),
-                FLinearColor(1.f,1.f,1.f,1.f), FLinearColor(0.f,0.f,0.f,1.f), true);
+            FLinearColor statsCol = (VehicleHP < 30.0f) ? FLinearColor(1.0f, 0.35f, 0.35f, 1.0f) : FLinearColor(1.0f, 1.0f, 1.0f, 0.95f);
+
+            DrawOutlinedText(HUD, VehicleStats, FVector2D(vehiclePos.X, vehiclePos.Y + 12.0f),
+                statsCol, COLOR_BLACK, true);
         }
     }
 }
