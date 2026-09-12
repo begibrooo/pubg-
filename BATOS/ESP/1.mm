@@ -30,12 +30,12 @@
 #include "imgui_notify.h"
 #import "font.h"
 #import "XolBackground.h"
-#import "HeeeNoScreenShotView.h"
+//#import "HeeeNoScreenShotView.h"
 // #import <AVFoundation/AVFoundation.h>
 //#import "../PatchNonJB/PatchNonJB.h"
 
-#define kWidth  [UIScreen mainScreen].bounds.size.width
-#define kHeight [UIScreen mainScreen].bounds.size.height
+#define kWidth  MAX([UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.height)
+#define kHeight MIN([UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.height)
 #define timer(sec) dispatch_after(dispatch_time(DISPATCH_TIME_NOW, sec * NSEC_PER_SEC), dispatch_s_main_queue(), ^
 NSString *xrpb = NSSENCRYPT("Paste Key...");
 
@@ -913,42 +913,56 @@ int autodiss()
 }
 
 
+@interface TouchMTKView : MTKView
+@property (nonatomic, weak) metalbiew *controller;
+@end
+
+@implementation TouchMTKView
+- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
+    if (!MenDeal) {
+        return nil; // When menu is closed, pass ALL touches to game
+    }
+    return [super hitTest:point withEvent:event];
+}
+
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    [self.controller updateIOWithTouchEvent:event];
+    [super touchesBegan:touches withEvent:event];
+}
+
+- (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    [self.controller updateIOWithTouchEvent:event];
+    [super touchesMoved:touches withEvent:event];
+}
+
+- (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    [self.controller updateIOWithTouchEvent:event];
+    [super touchesCancelled:touches withEvent:event];
+}
+
+- (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    [self.controller updateIOWithTouchEvent:event];
+    [super touchesEnded:touches withEvent:event];
+}
+@end
+
 NSString *resultx;
 @implementation metalbiew
 bool MenDeal;
 
-
-
-
-
-
-
 - (MTKView *)mtkView
 {
-    return _mtkView;
+    return (MTKView *)self.view;
 }
-
 
 - (void)loadView
 {
-    HeeeNoScreenShotView *noRecordView = [[HeeeNoScreenShotView alloc] initWithFrame:CGRectMake(0, 0, kWidth, kHeight)];
-    self.view = noRecordView;
-
-    _mtkView = [[MTKView alloc] initWithFrame:CGRectMake(0, 0, kWidth, kHeight)];
-    [self.view addSubview:_mtkView];
-
-    // Menyu orqa foni — RAKHIMOV VIP rasmi (20-25% xiralikda: 0.22f, screen recordda korinmaydi)
-    UIImageView *xolBg = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, kWidth, kHeight)];
-    xolBg.contentMode = UIViewContentModeScaleAspectFit;
-    xolBg.image = [UIImage imageWithData:[NSData dataWithBytes:XolBackgroundPNG length:XolBackgroundPNG_len]];
-    xolBg.alpha = 0.22f;
-    [self.view addSubview:xolBg];
-    [self.view bringSubviewToFront:xolBg];
+    TouchMTKView *touchView = [[TouchMTKView alloc] initWithFrame:CGRectMake(0, 0, kWidth, kHeight)];
+    touchView.controller = self;
+    self.view = touchView;
 }
 
 - (void)viewDidLoad {
-    
-    
     [super viewDidLoad];
     
     self.mtkView.device = self.device;
@@ -956,16 +970,22 @@ bool MenDeal;
     self.mtkView.clearColor = MTLClearColorMake(0, 0, 0, 0);
     self.mtkView.backgroundColor = [UIColor colorWithRed:0 green:0 blue:0 alpha:0];
     self.mtkView.clipsToBounds = YES;
-   
+    self.mtkView.userInteractionEnabled = YES;
+
+    // Chiroyli, shaffof RAKHIMOV VIP logotipi (orqa fonsiz, kattaroq, ekran tepasida)
+    CGFloat logoSize = 85.0f;
+    UIImageView *topLogo = [[UIImageView alloc] initWithFrame:CGRectMake((kWidth - logoSize) / 2.0f, 10.0f, logoSize, logoSize)];
+    topLogo.contentMode = UIViewContentModeScaleAspectFit;
+    topLogo.image = [UIImage imageWithData:[NSData dataWithBytes:XolBackgroundPNG length:XolBackgroundPNG_len]];
+    topLogo.userInteractionEnabled = NO; // Touches pass straight through!
+    topLogo.alpha = 0.95f;
+    topLogo.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleBottomMargin;
+    [self.view addSubview:topLogo];
 }
 
 ImVec4 to_vec5(float r, float g, float b, float a)
 {
     return ImVec4(r / 255.0, g / 255.0, b / 255.0, a / 255.0);
-    
-
-    
-    
 }
 
 
@@ -9299,7 +9319,14 @@ if (elapsedd < 1000 && !callNotify) {
                 if (ImGui::Button(tab4Name, ImVec2(80, 22)))
                     Settings::Tabmod = 4;
 
-                ImGui::PopStyleColor(5);
+                ImGui::SameLine();
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.85f, 0.20f, 0.20f, 0.85f));
+                const char* closeBtn = (Al == 0) ? "[X] Yopish" : ((Al == 1) ? "[X] Close" : "[X] Закрыть");
+                if (ImGui::Button(closeBtn, ImVec2(80, 22))) {
+                    MenDeal = false;
+                }
+
+                ImGui::PopStyleColor(6);
                 ImGui::Separator();
 
                 if (Settings::Tabmod == 0) {

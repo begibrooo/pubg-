@@ -137,20 +137,14 @@ static UIViewController *GetTopRootViewController(void) {
         metalbiew *vc = [[metalbiew alloc] init];
         _vna = vc;
     }
-    if (MenDeal == true) {
-        MenDeal = false;
-        if (_vna.view.superview) {
-            [_vna.view removeFromSuperview];
-        }
-    } else {
-        MenDeal = true;
-        UIWindow *window = GetAppKeyWindow();
-        if (window && window.rootViewController && window.rootViewController.view) {
-            if (_vna.view.superview != window.rootViewController.view) {
-                [window.rootViewController.view addSubview:_vna.view];
-            }
+    MenDeal = !MenDeal;
+    UIWindow *window = GetAppKeyWindow();
+    if (window && window.rootViewController && window.rootViewController.view) {
+        if (_vna.view.superview != window.rootViewController.view) {
+            [window.rootViewController.view addSubview:_vna.view];
         }
     }
+    _vna.view.userInteractionEnabled = MenDeal;
 }
 
 - (void)autoOpenMenu
@@ -165,6 +159,7 @@ static UIViewController *GetTopRootViewController(void) {
             [window.rootViewController.view addSubview:_vna.view];
         }
     }
+    _vna.view.userInteractionEnabled = YES;
 }
 
 @end

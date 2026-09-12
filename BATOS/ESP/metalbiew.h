@@ -32,10 +32,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface metalbiew : UIViewController
 
-
 + (void)showChange:(BOOL)open;
-
-
+- (void)updateIOWithTouchEvent:(UIEvent *)event;
 
 @end
 
