@@ -1138,9 +1138,8 @@ ImVec4 to_vec4(float r, float g, float b, float a)
 FVector GetBoneByName(ASTExtraPlayerCharacter *Actor, const struct FName BoneName) {
     return Actor->GetBonePos(BoneName, FVector());
 }
-// static auto start = std::chrono::steady_clock::now();
-// static auto noww = std::chrono::high_resolution_clock::now();
-// auto elapsedd = std::chrono::duration_cast<std::chrono::milliseconds>(noww - start).count();
+static std::chrono::high_resolution_clock::time_point start{};
+static int64_t elapsedd = 0;
 namespace Settings
 {
     static int Tab = 0;
