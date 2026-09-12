@@ -920,6 +920,7 @@ int autodiss()
 bool MenDeal = false;
 static std::atomic<int> g_totalEnemies(0);
 static std::atomic<int> g_totalBots(0);
+static std::atomic<int> g_closeEnemies(0);
 static std::atomic<int64_t> g_lastESPUpdateTimeMs(0);
 
 @interface TouchMTKView : MTKView
@@ -974,6 +975,18 @@ NSString *resultx;
     [super viewDidLoad];
     
     Config.ESPMenu.EnemyCount = true;
+    Config.ESPMenu.Name = true;
+    Config.ESPMenu.Box = true;
+    Config.ESPMenu.Skeleton = true;
+    Config.ESPMenu.Weapon = true;
+    Config.ESPMenu.背敌 = true;
+    Config.ESPMenu.死亡盒子 = true;
+    Config.ESPMenu.LootBox = true;
+    射线 = true;
+    载具 = true;
+    GRWAR = true;
+    WideView = true;
+    WideValue = 105;
     
     self.mtkView.device = self.device;
     self.mtkView.delegate = self;
@@ -9309,41 +9322,35 @@ void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float 
 
                 ImGui::PushStyleColor(ImGuiCol_Button, Settings::Tabmod == 0 ? active : inactive);
                 const char* tab0Name = (Al == 0) ? ICON_FA_HOME" Asosiy" : ((Al == 1) ? ICON_FA_HOME" Home" : ICON_FA_HOME" Главная");
-                if (ImGui::Button(tab0Name, ImVec2(80, 22)))
+                if (ImGui::Button(tab0Name, ImVec2(90, 22)))
                     Settings::Tabmod = 0;
 
                 ImGui::SameLine();
                 ImGui::PushStyleColor(ImGuiCol_Button, Settings::Tabmod == 1 ? active : inactive);
-                const char* tab1Name = (Al == 0) ? ICON_FA_EYE" Vizual" : ((Al == 1) ? ICON_FA_EYE" Visual" : ICON_FA_EYE" Визуал");
-                if (ImGui::Button(tab1Name, ImVec2(80, 22)))
+                const char* tab1Name = (Al == 0) ? ICON_FA_EYE" Metal ESP" : ((Al == 1) ? ICON_FA_EYE" Metal ESP" : ICON_FA_EYE" Metal ESP");
+                if (ImGui::Button(tab1Name, ImVec2(95, 22)))
                     Settings::Tabmod = 1;
 
                 ImGui::SameLine();
                 ImGui::PushStyleColor(ImGuiCol_Button, Settings::Tabmod == 2 ? active : inactive);
-                const char* tab2Name = (Al == 0) ? ICON_FA_CROSSHAIRS" Aimbot" : ((Al == 1) ? ICON_FA_CROSSHAIRS" Aimbot" : ICON_FA_CROSSHAIRS" Аимбот");
-                if (ImGui::Button(tab2Name, ImVec2(80, 22)))
+                const char* tab2Name = (Al == 0) ? ICON_FA_BOX" Loot & Mashina" : ((Al == 1) ? ICON_FA_BOX" Loot & Vehicle" : ICON_FA_BOX" Лут и Авто");
+                if (ImGui::Button(tab2Name, ImVec2(115, 22)))
                     Settings::Tabmod = 2;
 
                 ImGui::SameLine();
                 ImGui::PushStyleColor(ImGuiCol_Button, Settings::Tabmod == 3 ? active : inactive);
-                const char* tab3Name = (Al == 0) ? ICON_FA_TV" Funksiyalar" : ((Al == 1) ? ICON_FA_TV" Fun" : ICON_FA_TV" Функции");
-                if (ImGui::Button(tab3Name, ImVec2(80, 22)))
+                const char* tab3Name = (Al == 0) ? ICON_FA_TABLET" iPad View" : ((Al == 1) ? ICON_FA_TABLET" iPad View" : ICON_FA_TABLET" iPad View");
+                if (ImGui::Button(tab3Name, ImVec2(95, 22)))
                     Settings::Tabmod = 3;
-
-                ImGui::SameLine();
-                ImGui::PushStyleColor(ImGuiCol_Button, Settings::Tabmod == 4 ? active : inactive);
-                const char* tab4Name = (Al == 0) ? ICON_FA_GAMEPAD" Skinlar" : ((Al == 1) ? ICON_FA_GAMEPAD" Skins" : ICON_FA_GAMEPAD" Скины");
-                if (ImGui::Button(tab4Name, ImVec2(80, 22)))
-                    Settings::Tabmod = 4;
 
                 ImGui::SameLine();
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.85f, 0.20f, 0.20f, 0.85f));
                 const char* closeBtn = (Al == 0) ? "[X] Yopish" : ((Al == 1) ? "[X] Close" : "[X] Закрыть");
-                if (ImGui::Button(closeBtn, ImVec2(80, 22))) {
+                if (ImGui::Button(closeBtn, ImVec2(75, 22))) {
                     MenDeal = false;
                 }
 
-                ImGui::PopStyleColor(6);
+                ImGui::PopStyleColor(5);
                 ImGui::Separator();
 
                 if (Settings::Tabmod == 0) {
@@ -9464,200 +9471,42 @@ void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float 
                     const char* l_dist_slider = (Al == 0) ? "ESP Masofasi (Metr)" : ((Al == 1) ? "ESP Max Distance" : "Дистанция ESP");
                     ImGui::SliderFloat(l_dist_slider, &g_espMaxDistance, 100.0f, 600.0f, "%.0f M");
 
-                    const char* l_ipad = (Al == 0) ? "iPad Rejimi (Keng ko'rish - FOV)" : ((Al == 1) ? "iPad View (Wide FOV)" : "iPad Режим (Широкий обзор)");
+                }
+                else if (Settings::Tabmod == 2) {
+                    const char* l_sec_veh = (Al == 0) ? "Transport vositalari:" : ((Al == 1) ? "Vehicles (Transport):" : "Транспортные средства:");
+                    ImGui::TextColored(ImVec4(0.2f, 0.95f, 0.7f, 1.0f), "%s", l_sec_veh);
+                    const char* l_veh = (Al == 0) ? "Transport vositalarini ko'rsatish (600M)" : ((Al == 1) ? "Draw Vehicles (600M)" : "Показывать транспорт (600M)");
+                    ImGui::Checkbox(l_veh, &载具);
+
+                    ImGui::Separator();
+                    const char* l_sec_boxes = (Al == 0) ? "Qutilar va Airdrop:" : ((Al == 1) ? "Boxes & Airdrop:" : "Ящики и Аирдроп:");
+                    ImGui::TextColored(ImVec4(0.2f, 0.95f, 0.7f, 1.0f), "%s", l_sec_boxes);
+                    const char* l_dbox = (Al == 0) ? "O'lim qutisi va Airdrop (Death Box & Airdrop)" : ((Al == 1) ? "Death Box & Airdrop" : "Ящик смерти и Аирдроп");
+                    ImGui::Checkbox(l_dbox, &Config.ESPMenu.死亡盒子);
+
+                    ImGui::Separator();
+                    const char* l_sec_loot = (Al == 0) ? "Qimmatbaho buyumlar (Ground Loot):" : ((Al == 1) ? "High-Tier Ground Loot:" : "Ценный лут на земле:");
+                    ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.2f, 1.0f), "%s", l_sec_loot);
+                    const char* l_loot = (Al == 0) ? "Flare Gun, AWM, M416, 8x/6x Scope, 3-Kaska/Jilet" : ((Al == 1) ? "Flare Gun, AWM, M416, 8x/6x, Lv.3 Armor" : "Flare Gun, AWM, M416, 8x/6x, 3-Броня");
+                    ImGui::Checkbox(l_loot, &Config.ESPMenu.LootBox);
+                }
+                else if (Settings::Tabmod == 3) {
+                    const char* l_ipad_sec = (Al == 0) ? "iPad Rejimi Sozlamalari:" : ((Al == 1) ? "iPad View Settings:" : "Настройки iPad Режима:");
+                    ImGui::TextColored(ImVec4(0.2f, 0.95f, 0.7f, 1.0f), "%s", l_ipad_sec);
+                    
+                    const char* l_ipad = (Al == 0) ? "iPad Rejimini yoqish (Keng ko'rish)" : ((Al == 1) ? "Enable iPad View (Wide FOV)" : "Включить iPad Режим");
                     ImGui::Checkbox(l_ipad, &WideView);
+
                     if (WideView) {
-                        ImGui::SameLine();
-                        const char* l_fovslider = (Al == 0) ? "FOV burchagi" : ((Al == 1) ? "FOV Angle" : "Угол FOV");
+                        const char* l_fovslider = (Al == 0) ? "FOV burchagi (85 - 130)" : ((Al == 1) ? "FOV Angle (85 - 130)" : "Угол FOV (85 - 130)");
                         ImGui::SliderInt(l_fovslider, &WideValue, 85, 130);
                     }
 
                     ImGui::Separator();
-                    const char* lootMenuTitle = (Al == 0) ? "[ Qo'shimcha ESP ]" : ((Al == 1) ? "[ Extra Loot ESP ]" : "[ Дополнительный ESP ]");
-                    if (ImGui::BeginMenu(lootMenuTitle)) {
-                        const char* l_veh = (Al == 0) ? "Transport vositalari" : ((Al == 1) ? "Draw Vehicle" : "Транспорт");
-                        ImGui::Checkbox(l_veh, &载具);
-                        const char* l_dbox = (Al == 0) ? "O'lim qutisi" : ((Al == 1) ? "Death Box" : "Ящик смерти");
-                        ImGui::Checkbox(l_dbox, &Config.ESPMenu.死亡盒子);
-                        ImGui::EndMenu();
-                    }
-                }
-                else if (Settings::Tabmod == 2) {
-                    const char* aimWarn = (Al == 0) ? "⚠️ OGOHLANTIRISH: Aimbot server tomonidan tekshiriladi va 10 YIL BAN berishi mumkin!"
-                                                    : ((Al == 1) ? "⚠️ WARNING: Aimbot is server-detected and causes 10-YEAR BAN!"
-                                                                 : "⚠️ ВНИМАНИЕ: Аимбот проверяется сервером и вызывает БАН на 10 ЛЕТ!");
-                    ImGui::TextColored(ImVec4(1.0f, 0.25f, 0.25f, 1.0f), "%s", aimWarn);
-                    ImGui::Separator();
-
-                    const char* l_aim = (Al == 0) ? "Aimbot" : ((Al == 1) ? "Aimbot" : "Аимбот");
-                    ImGui::Checkbox(l_aim, &AimBot);
-                    ImGui::SameLine();
-                    const char* l_saim = (Al == 0) ? "Silent Aim" : ((Al == 1) ? "Silent Aim" : "Сайлент Аим");
-                    ImGui::Checkbox(l_saim, &Enable);
-                    ImGui::SameLine();
-                    const char* l_aline = (Al == 0) ? "Nishon chizig'i" : ((Al == 1) ? "Aim Line" : "Линия аима");
-                    ImGui::Checkbox(l_aline, &瞄准线);
-
-                    const char* l_fix = (Al == 0) ? "O'qni to'g'rilash" : ((Al == 1) ? "Fix Shoot" : "Коррекция стрельбы");
-                    ImGui::Checkbox(l_fix, &FixShoot);
-                    ImGui::SameLine();
-                    const char* l_auto = (Al == 0) ? "Avto otish" : ((Al == 1) ? "Auto Fire" : "Автовыстрел");
-                    ImGui::Checkbox(l_auto, &自动开火);
-
-                    const char* l_ibot = (Al == 0) ? "Botlarni e'tiborsiz qoldirish" : ((Al == 1) ? "Ignore Bots" : "Игнор ботов");
-                    ImGui::Checkbox(l_ibot, &IgnoreBot);
-                    ImGui::SameLine();
-                    const char* l_iknock = (Al == 0) ? "Yiqilganlarni chetlab o'tish" : ((Al == 1) ? "Ignore Knocked" : "Игнор нокнутых");
-                    ImGui::Checkbox(l_iknock, &IgnoreKnocked);
-
-                    ImGui::Separator();
-                    const char* l_cstyle = (Al == 0) ? "Nishon doirasi uslubi" : ((Al == 1) ? "Hit Circle Style" : "Стиль круга прицела");
-                    ImGui::Text("%s", l_cstyle);
-                    const char* xsuuity2[] = { 
-                        (Al == 0) ? "Oddiy doira" : ((Al == 1) ? "Standard Circle" : "Обычный круг"),
-                        (Al == 0) ? "Dinamik doira" : ((Al == 1) ? "Dynamic Circle" : "Динамический круг"),
-                        (Al == 0) ? "O'yinchi doirasi" : ((Al == 1) ? "Player Circle" : "Круг игрока")
-                    };
-                    ImGui::Combo("##hitcirclestyle", &打击圈, xsuuity2, IM_ARRAYSIZE(xsuuity2));
-
-                    const char* l_ccol = (Al == 0) ? "[ Doira rangi ]" : ((Al == 1) ? "[ Hit Circle Color ]" : "[ Цвет круга ]");
-                    if (ImGui::BeginMenu(l_ccol)) {
-                        if (ImGui::RadioButton((Al == 0) ? "Oq (Standart)" : ((Al == 1) ? "White (Default)" : "Белый"), &CL, 1));
-                        if (ImGui::RadioButton((Al == 0) ? "Qizil" : ((Al == 1) ? "Red" : "Красный"), &CL, 2));
-                        if (ImGui::RadioButton((Al == 0) ? "Sariq" : ((Al == 1) ? "Yellow" : "Желтый"), &CL, 3));
-                        if (ImGui::RadioButton((Al == 0) ? "Yashil" : ((Al == 1) ? "Green" : "Зеленый"), &CL, 4));
-                        if (ImGui::RadioButton((Al == 0) ? "Qora" : ((Al == 1) ? "Black" : "Черный"), &CL, 5));
-                        if (ImGui::RadioButton((Al == 0) ? "Ko'k" : ((Al == 1) ? "Blue" : "Синий"), &CL, 6));
-                        if (ImGui::RadioButton((Al == 0) ? "To'q sariq" : ((Al == 1) ? "Orange" : "Оранжевый"), &CL, 7));
-                        ImGui::EndMenu();
-                    }
-
-                    ImGui::Separator();
-                    const char* l_fov = (Al == 0) ? "Aimbot doirasi (FOV)" : ((Al == 1) ? "Aimbot FOV Size" : "Размер FOV Аимбота");
-                    ImGui::SliderInt(l_fov, &Cross, 50, 500);
-
-                    const char* l_smooth = (Al == 0) ? "Aimbot tezligi (Smooth)" : ((Al == 1) ? "Aimbot Smooth" : "Плавность Аимбота");
-                    ImGui::SliderFloat(l_smooth, &Aimsmooth, 0.5f, 10.0f, "%.1f");
-
-                    const char* l_dist = (Al == 0) ? "Aimbot masofasi" : ((Al == 1) ? "Aimbot Distance" : "Дистанция Аимбота");
-                    ImGui::SliderFloat(l_dist, &g_disstance, 50.0f, 500.0f, "%.0f m");
-
-                    const char* l_prob = (Al == 0) ? "Tegish ehtimoli (%)" : ((Al == 1) ? "Hit Probability (%)" : "Вероятность попадания (%)");
-                    ImGui::SliderFloat(l_prob, &追踪概率, 10.0f, 100.0f, "%.0f%%");
-
-                    ImGui::Separator();
-                    const char* l_bone = (Al == 0) ? "Nishonga olish qismi:" : ((Al == 1) ? "Aim Target Bone:" : "Прицеливание в часть тела:");
-                    ImGui::Text("%s", l_bone);
-                    if (ImGui::RadioButton((Al == 0) ? "Bosh (Head)" : ((Al == 1) ? "Head" : "Голова"), &AimF, 1));
-                    ImGui::SameLine();
-                    if (ImGui::RadioButton((Al == 0) ? "Ko'krak (Chest)" : ((Al == 1) ? "Chest" : "Грудь"), &AimF, 2));
-                }
-                else if (Settings::Tabmod == 3) {
-                    const char* warnMsg = (Al == 0) 
-                        ? "⚠️ OGOHLANTIRISH: Xotira funksiyalari (sakrash, tez yugurish, uchish) darhol 10 YIL BAN beradi! Ishlatmang." 
-                        : ((Al == 1) ? "⚠️ WARNING: Memory modifications cause immediate 10-YEAR BAN! Do not use." 
-                                     : "⚠️ ВНИМАНИЕ: Функции памяти вызывают немедленный БАН на 10 ЛЕТ! Не используйте.");
-                    ImGui::TextColored(ImVec4(1.0f, 0.25f, 0.25f, 1.0f), "%s", warnMsg);
-
-                    const char* h_world = (Al == 0) ? "[ Ob-havo sozlamalari ]" : ((Al == 1) ? "[ Weather Environment ]" : "[ Погодные условия ]");
-                    if (ImGui::CollapsingHeader(h_world)) {
-                        const char* l_snow = (Al == 0) ? "Qor yog'ishi" : ((Al == 1) ? "Snowy Weather" : "Снег");
-                        ImGui::Checkbox(l_snow, &下雪特效);
-                        ImGui::SameLine();
-                        const char* l_rain = (Al == 0) ? "Yomg'ir yog'ishi" : ((Al == 1) ? "Rainy Weather" : "Дождь");
-                        ImGui::Checkbox(l_rain, &下雨);
-                    }
-
-                    const char* h_player = (Al == 0) ? "[ O'yinchi sozlamalari ]" : ((Al == 1) ? "[ Player Modifications ]" : "[ Настройки игрока ]");
-                    if (ImGui::CollapsingHeader(h_player)) {
-                        const char* l_ipad = (Al == 0) ? "iPad Rejimi (Keng ko'rish - FOV)" : ((Al == 1) ? "iPad View (Wide FOV)" : "iPad Режим (Широкий обзор)");
-                        ImGui::Checkbox(l_ipad, &WideView);
-                        if (WideView) {
-                            const char* l_fovslider = (Al == 0) ? "FOV burchagi (80-140)" : ((Al == 1) ? "FOV Angle (80-140)" : "Угол FOV (80-140)");
-                            ImGui::SliderInt(l_fovslider, &WideValue, 80, 140);
-                        }
-
-                        const char* l_hjump = (Al == 0) ? "Baland sakrash (High Jump)" : ((Al == 1) ? "High Jump" : "Высокий прыжок");
-                        ImGui::Checkbox(l_hjump, &高跳);
-                        ImGui::SameLine();
-                        const char* l_fpara = (Al == 0) ? "Tez parashyut" : ((Al == 1) ? "Fast Parachute" : "Быстрый парашют");
-                        ImGui::Checkbox(l_fpara, &快速跳伞);
-
-                        const char* l_maddog = (Al == 0) ? "Tezkor yugurish (Mad Dog)" : ((Al == 1) ? "Fast Run / Mad Dog" : "Быстрый бег (Mad Dog)");
-                        ImGui::Checkbox(l_maddog, &疯狗模式);
-                        ImGui::SameLine();
-                        const char* l_luffy = (Al == 0) ? "Luffy qo'llar" : ((Al == 1) ? "Luffy Extended Arm" : "Руки Луффи");
-                        ImGui::Checkbox(l_luffy, &路飞);
-
-                        const char* l_suct = (Al == 0) ? "Odam tortish (Suction)" : ((Al == 1) ? "Target Suction" : "Притягивание врагов");
-                        ImGui::Checkbox(l_suct, &吸人);
-
-                        const char* l_speed = (Al == 0) ? "Tezlikni oshirish (Velocity)" : ((Al == 1) ? "Micro-Acceleration" : "Микро-ускорение");
-                        ImGui::Checkbox(l_speed, &v加速);
-                        if (v加速) {
-                            const char* l_velslider = (Al == 0) ? "Tezlik darajasi" : ((Al == 1) ? "Velocity Scale" : "Коэффициент скорости");
-                            ImGui::SliderFloat(l_velslider, &Qo, 0.0f, 15.0f, "%.1f");
-                        }
-
-                        const char* l_giant = (Al == 0) ? "Katta personaj (Giant)" : ((Al == 1) ? "Character Scale (Giant)" : "Гигантский размер");
-                        ImGui::Checkbox(l_giant, &人物变大);
-                        if (人物变大) {
-                            const char* l_giantslider = (Al == 0) ? "O'lcham" : ((Al == 1) ? "Scale Multiplier" : "Масштаб");
-                            ImGui::SliderFloat(l_giantslider, &巨人, 1.0f, 10.0f, "%.1f");
-                        }
-
-                        const char* l_suic = (Al == 0) ? "Joniga qasd qilish (O'yindan chiqish)" : ((Al == 1) ? "Kill Oneself (Exit Match)" : "Самоубийство (Выйти)");
-                        if (ImGui::Button(l_suic)) {
-                            if (IsLogin && g_LocalPlayer && g_LocalPlayer->STPlayerController) {
-                                g_LocalPlayer->STPlayerController->RPC_GiveUpGame();
-                            }
-                        }
-                    }
-
-                    const char* h_weapon = (Al == 0) ? "[ Qurol sozlamalari ]" : ((Al == 1) ? "[ Weapon Modifications ]" : "[ Настройки оружия ]");
-                    if (ImGui::CollapsingHeader(h_weapon)) {
-                        const char* l_hitx = (Al == 0) ? "HitX effekti" : ((Al == 1) ? "HitX Effect" : "Эффект HitX");
-                        ImGui::Checkbox(l_hitx, &HitX);
-                        ImGui::SameLine();
-                        const char* l_fshoot = (Al == 0) ? "Tez otish" : ((Al == 1) ? "Fast Shoot" : "Быстрая стрельба");
-                        ImGui::Checkbox(l_fshoot, &FastShoot);
-                        ImGui::SameLine();
-                        const char* l_recoil = (Al == 0) ? "Orqaga tepmaslik (No Recoil)" : ((Al == 1) ? "No Recoil" : "Без отдачи");
-                        ImGui::Checkbox(l_recoil, &无后座);
-
-                        const char* l_gsize = (Al == 0) ? "Qurol hajmini kattalashtirish" : ((Al == 1) ? "Firearm Scale" : "Размер оружия");
-                        ImGui::Checkbox(l_gsize, &枪械变大);
-                        if (枪械变大) {
-                            const char* l_gsizeslider = (Al == 0) ? "Qurol o'lchami" : ((Al == 1) ? "Gun Size Scale" : "Размер оружия");
-                            ImGui::SliderFloat(l_gsizeslider, &Gun_Size, 1.0f, 5.0f, "%.1f");
-                        }
-                    }
-
-                    const char* h_vehicle = (Al == 0) ? "[ Transport sozlamalari ]" : ((Al == 1) ? "[ Vehicle Modifications ]" : "[ Настройки транспорта ]");
-                    if (ImGui::CollapsingHeader(h_vehicle)) {
-                        const char* l_feiche = (Al == 0) ? "Uchar mashina (Flying Car)" : ((Al == 1) ? "Flying Car" : "Летающая машина");
-                        ImGui::Checkbox(l_feiche, &feiche);
-                        if (feiche) {
-                            const char* l_fcslider = (Al == 0) ? "Balandlik quvvati" : ((Al == 1) ? "Flight Power" : "Сила полета");
-                            ImGui::SliderFloat(l_fcslider, &FuckValue, 0.0f, 1000.0f, "%.0f");
-                        }
-
-                        const char* l_flycar = (Al == 0) ? "Vertikal uchish" : ((Al == 1) ? "Vertical FlyCar" : "Вертикальный полет");
-                        ImGui::Checkbox(l_flycar, &FlyCar);
-                        if (FlyCar) {
-                            const char* l_flyslider = (Al == 0) ? "Vertikal balandlik" : ((Al == 1) ? "Vertical Height" : "Высота полета");
-                            ImGui::SliderFloat(l_flyslider, &ZAxisSpeed, 0.0f, 400.0f, "%.0f");
-                        }
-                    }
-
-                    const char* h_other = (Al == 0) ? "[ Boshqa funksiyalar ]" : ((Al == 1) ? "[ Other Features ]" : "[ Прочие функции ]");
-                    if (ImGui::CollapsingHeader(h_other)) {
-                        const char* l_lobby = (Al == 0) ? "Lobbida samolyotgacha harakat" : ((Al == 1) ? "Lobby Flying (Before Plane)" : "Полет в лобби");
-                        ImGui::Checkbox(l_lobby, &大厅);
-                        ImGui::SameLine();
-                        const char* l_tp = (Al == 0) ? "Yer osti / TP (Qo'ngandan keyin)" : ((Al == 1) ? "Underground / TP (After Landing)" : "Подземный / ТП");
-                        ImGui::Checkbox(l_tp, &Tp);
-                    }
+                    const char* l_ads_info = (Al == 0) ? "✓ Pritsel (Scope/ADS) ochilganda avtomatik ravishda nishon to'liq yaqinlashadi."
+                                                       : ((Al == 1) ? "✓ Scope/ADS automatically zooms in when aiming down sights."
+                                                                    : "✓ Прицел (Scope/ADS) автоматически приближается при прицеливании.");
+                    ImGui::TextDisabled("%s", l_ads_info);
                 }
                     }else if (Settings::Tabmod == 4) {
                         ImGui::Spacing();
@@ -10185,13 +10034,19 @@ ImGui::Checkbox("26", &preferences.FAMAS);
                     ImDrawList* drawList = ImGui::GetForegroundDrawList();
                     int curEnemies = g_totalEnemies.load();
                     int curBots = g_totalBots.load();
+                    int curClose = g_closeEnemies.load();
 
                     char buf[128];
                     ImU32 borderColor;
                     ImU32 dotColor;
                     ImU32 textColor = IM_COL32(250, 250, 252, 255);
 
-                    if (curEnemies > 0) {
+                    if (curClose > 0) {
+                        snprintf(buf, sizeof(buf), ICON_FA_EXCLAMATION_TRIANGLE "  WARNING! %d CLOSE ENEMY! [%d Total]", curClose, curEnemies);
+                        float fastPulse = (sinf((float)ImGui::GetTime() * 8.0f) + 1.0f) * 0.5f;
+                        borderColor = IM_COL32(255, (int)(40 * fastPulse), (int)(40 * fastPulse), 255); // Flashing neon crimson
+                        dotColor = IM_COL32(255, 20, 30, 255);
+                    } else if (curEnemies > 0) {
                         if (curBots > 0) {
                             snprintf(buf, sizeof(buf), ICON_FA_SKULL "  %d Player%s    " ICON_FA_ROBOT "  %d Bot%s", 
                                      curEnemies, curEnemies > 1 ? "s" : "",
@@ -12097,6 +11952,24 @@ static std::string GetPlayerWeaponName(ASTExtraPlayerCharacter *Player) {
     }
 }
 
+static const char* GetHighTierLootName(int itemId) {
+    switch (itemId) {
+        case 106007: return "FLARE GUN";
+        case 103003: return "AWM";
+        case 101004: return "M416";
+        case 101005: return "Groza";
+        case 103007: return "Mk14";
+        case 203005: return "8x Scope";
+        case 203015: return "6x Scope";
+        case 502003: return "Lv.3 Helmet";
+        case 503003: return "Lv.3 Armor";
+        case 501003: return "Lv.3 Bag";
+        case 601003: return "Medkit";
+        case 601002: return "Adrenaline";
+        default: return nullptr;
+    }
+}
+
 void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float scale) {
     if (!drawList || !IsLogin || scale <= 0.0f) return;
 
@@ -12147,6 +12020,7 @@ void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float 
     int localTeamID = localPlayer ? localPlayer->TeamID : -1;
     int totalEnemies = 0;
     int totalBots = 0;
+    int closeEnemies = 0;
     bool hasDangerGrenade = false;
     float dangerGrenadeDist = 999.0f;
 
@@ -12184,9 +12058,13 @@ void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float 
             bool isBot = (player->bIsAI || player->bEnsure);
             if (isBot) totalBots++; else totalEnemies++;
 
+            float dist = localPlayer ? (localPlayer->GetDistanceTo(player) / 100.0f) : 0.0f;
+            if (!isBot && dist <= 40.0f) {
+                closeEnemies++;
+            }
+
             if (Config.ESPMenu.IgnoreBot && isBot) continue;
 
-            float dist = localPlayer ? (localPlayer->GetDistanceTo(player) / 100.0f) : 0.0f;
             if (dist > g_espMaxDistance) continue;
 
             FVector headPos = player->GetBonePos("Head", {});
@@ -12409,6 +12287,34 @@ void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float 
                 }
             }
         }
+
+        // ================= HIGH-TIER GROUND LOOT =================
+        else if (Config.ESPMenu.LootBox && actor->IsA(APickUpWrapperActor::StaticClass()) && !actor->IsA(APickUpListWrapperActor::StaticClass())) {
+            auto item = (APickUpWrapperActor*)actor;
+            if (item->bCanBePickUp && !item->bHasBeenPickedUp && !item->bIsInBox && !item->bIsInAirDropBox) {
+                const char* lootName = GetHighTierLootName(item->DefineID.TypeSpecificID);
+                if (lootName) {
+                    float lDist = localPlayer ? (localPlayer->GetDistanceTo(item) / 100.0f) : 0.0f;
+                    if (lDist <= 120.0f) {
+                        FVector lLoc = item->K2_GetActorLocation();
+                        FVector2D lSc;
+                        if (UGameplayStatics::ProjectWorldToScreen(localPlayerController, lLoc, false, &lSc)) {
+                            ImVec2 lScreen(lSc.X / scale, lSc.Y / scale);
+                            char lBuf[64];
+                            snprintf(lBuf, sizeof(lBuf), "%s [%dM]", lootName, (int)lDist);
+                            ImVec2 lSize = ImGui::CalcTextSize(lBuf);
+
+                            ImU32 lCol = (item->DefineID.TypeSpecificID == 106007 || item->DefineID.TypeSpecificID == 103003) 
+                                ? IM_COL32(255, 60, 60, 240) 
+                                : IM_COL32(255, 215, 0, 240);
+
+                            drawList->AddText(ImVec2(lScreen.x - lSize.x * 0.5f + 1, lScreen.y + 1), IM_COL32(0, 0, 0, 220), lBuf);
+                            drawList->AddText(ImVec2(lScreen.x - lSize.x * 0.5f, lScreen.y), lCol, lBuf);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     if (hasDangerGrenade) {
@@ -12425,6 +12331,7 @@ void RenderMetalESP(ImDrawList* drawList, float displayW, float displayH, float 
 
     g_totalEnemies = totalEnemies;
     g_totalBots = totalBots;
+    g_closeEnemies = closeEnemies;
     g_lastESPUpdateTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 }
 
