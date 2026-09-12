@@ -3,6 +3,8 @@
 #include "sys/mman.h"
 #include "Tools.h"
 #import <AVFoundation/AVFoundation.h>
+#include <atomic>
+#include <chrono>
 #include <stdio.h>
 #include <stdint.h>
 #import <CoreTelephony/CTTelephonyNetworkInfo.h>
@@ -62,6 +64,7 @@ static inline float CalcVectorDist(const FVector& a, const FVector& b) {
 @property (nonatomic,  weak) NSTimer *timer;
 @property (nonatomic,  assign) NSInteger aimcir;
 @property (nonatomic,  assign) NSInteger rpr;
+@property (nonatomic, strong) UIImageView *topLogo;
 
 @end
 bool isAimKnocked = true;
@@ -336,6 +339,7 @@ bool ConfigSilentAimEnable = false;//原false
             bool IgnoreBot;
             bool LootBox;
             bool Throwables;
+            bool EnemyCount;
         };
         sESPMenu ESPMenu{false};//false
 
@@ -913,6 +917,9 @@ int autodiss()
 }
 
 bool MenDeal = false;
+static std::atomic<int> g_totalEnemies(0);
+static std::atomic<int> g_totalBots(0);
+static std::atomic<int64_t> g_lastESPUpdateTimeMs(0);
 
 @interface TouchMTKView : MTKView
 @property (nonatomic, weak) metalbiew *controller;
@@ -965,6 +972,8 @@ NSString *resultx;
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    Config.ESPMenu.EnemyCount = true;
+    
     self.mtkView.device = self.device;
     self.mtkView.delegate = self;
     self.mtkView.clearColor = MTLClearColorMake(0, 0, 0, 0);
@@ -972,15 +981,16 @@ NSString *resultx;
     self.mtkView.clipsToBounds = YES;
     self.mtkView.userInteractionEnabled = YES;
 
-    // Chiroyli, shaffof RAKHIMOV VIP logotipi (orqa fonsiz, kattaroq, ekran tepasida)
+    // Chiroyli, shaffof RAKHIMOV VIP logotipi (menyu ochilganda ko'rinadi)
     CGFloat logoSize = 85.0f;
-    UIImageView *topLogo = [[UIImageView alloc] initWithFrame:CGRectMake((kWidth - logoSize) / 2.0f, 10.0f, logoSize, logoSize)];
-    topLogo.contentMode = UIViewContentModeScaleAspectFit;
-    topLogo.image = [UIImage imageWithData:[NSData dataWithBytes:XolBackgroundPNG length:XolBackgroundPNG_len]];
-    topLogo.userInteractionEnabled = NO; // Touches pass straight through!
-    topLogo.alpha = 0.95f;
-    topLogo.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleBottomMargin;
-    [self.view addSubview:topLogo];
+    self.topLogo = [[UIImageView alloc] initWithFrame:CGRectMake((kWidth - logoSize) / 2.0f, 10.0f, logoSize, logoSize)];
+    self.topLogo.contentMode = UIViewContentModeScaleAspectFit;
+    self.topLogo.image = [UIImage imageWithData:[NSData dataWithBytes:XolBackgroundPNG length:XolBackgroundPNG_len]];
+    self.topLogo.userInteractionEnabled = NO; // Touches pass straight through!
+    self.topLogo.alpha = 0.95f;
+    self.topLogo.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleBottomMargin;
+    self.topLogo.hidden = YES; // Faqat menyu ochilganda ko'rsatiladi
+    [self.view addSubview:self.topLogo];
 }
 
 ImVec4 to_vec5(float r, float g, float b, float a)
@@ -9121,6 +9131,9 @@ bool callNotify = false;
     
     
     
+    if (self.topLogo) {
+        self.topLogo.hidden = !MenDeal;
+    }
     if (MenDeal == true) {
         [self.view setUserInteractionEnabled:YES];
     } else if (MenDeal == false) {
@@ -9393,6 +9406,9 @@ if (elapsedd < 1000 && !callNotify) {
                     ImGui::TextDisabled("RAKHIMOV VIP | All Rights Reserved");
                 }
                 else if (Settings::Tabmod == 1) {
+                    const char* l_cnt = (Al == 0) ? "Dushman hisoblagich (Counter)" : ((Al == 1) ? "Enemy Counter" : "Счетчик врагов");
+                    ImGui::Checkbox(l_cnt, &Config.ESPMenu.EnemyCount);
+                    ImGui::SameLine();
                     const char* l_ray = (Al == 0) ? "Nur chizish (Ray)" : ((Al == 1) ? "Draw Ray" : "Линия (Ray)");
                     ImGui::Checkbox(l_ray, &射线);
                     ImGui::SameLine();
@@ -10137,6 +10153,67 @@ ImGui::Checkbox("26", &preferences.FAMAS);
                 ImGui::PopStyleVar(1);
                 ImGui::PopStyleColor(1);
             }
+
+            // ===== VIP ENEMY COUNTER PILL HUD =====
+            if (Config.ESPMenu.EnemyCount) {
+                int64_t now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+                int64_t last_ms = g_lastESPUpdateTimeMs.load();
+                if (last_ms > 0 && (now_ms - last_ms) < 2500) {
+                    ImDrawList* drawList = ImGui::GetForegroundDrawList();
+                    char buf[64];
+                    ImU32 bgColor = IM_COL32(14, 16, 22, 215);
+                    ImU32 borderColor;
+                    ImU32 dotColor;
+                    int curEnemies = g_totalEnemies.load();
+                    int curBots = g_totalBots.load();
+
+                    if (curEnemies > 0) {
+                        snprintf(buf, sizeof(buf), "ENEMIES: %d  |  BOTS: %d", curEnemies, curBots);
+                        borderColor = IM_COL32(255, 60, 75, 240); // Crimson red alert
+                        dotColor = IM_COL32(255, 50, 65, 255);
+                    } else if (curBots > 0) {
+                        snprintf(buf, sizeof(buf), "BOTS ONLY: %d", curBots);
+                        borderColor = IM_COL32(255, 175, 40, 240); // Amber warning
+                        dotColor = IM_COL32(255, 165, 30, 255);
+                    } else {
+                        snprintf(buf, sizeof(buf), "SAFE (0 ENEMIES)");
+                        borderColor = IM_COL32(46, 213, 115, 230); // Emerald safe
+                        dotColor = IM_COL32(46, 213, 115, 255);
+                    }
+
+                    ImVec2 textSize = ImGui::CalcTextSize(buf);
+                    float padX = 14.0f;
+                    float padY = 6.0f;
+                    float dotRadius = 4.0f;
+                    float dotGap = 8.0f;
+                    float totalW = textSize.x + padX * 2.0f + (dotRadius * 2.0f + dotGap);
+                    float totalH = textSize.y + padY * 2.0f;
+
+                    float centerX = io.DisplaySize.x * 0.5f;
+                    float posY = 36.0f;
+                    ImVec2 pMin(centerX - totalW * 0.5f, posY);
+                    ImVec2 pMax(centerX + totalW * 0.5f, posY + totalH);
+
+                    // 1. Soft drop shadow
+                    drawList->AddRectFilled(ImVec2(pMin.x + 2.0f, pMin.y + 2.0f), ImVec2(pMax.x + 2.0f, pMax.y + 2.0f), IM_COL32(0, 0, 0, 90), 12.0f);
+                    // 2. Translucent dark glass pill
+                    drawList->AddRectFilled(pMin, pMax, bgColor, 12.0f);
+                    // 3. Glowing colored outline
+                    drawList->AddRect(pMin, pMax, borderColor, 12.0f, 0, 1.5f);
+
+                    // 4. Indicator dot + glow
+                    float dotX = pMin.x + padX + dotRadius;
+                    float dotY = pMin.y + totalH * 0.5f;
+                    drawList->AddCircleFilled(ImVec2(dotX, dotY), dotRadius, dotColor);
+                    drawList->AddCircle(ImVec2(dotX, dotY), dotRadius + 1.5f, IM_COL32(255, 255, 255, 50), 12, 1.0f);
+
+                    // 5. Crisp label text
+                    float textX = dotX + dotRadius + dotGap;
+                    float textY = pMin.y + padY;
+                    drawList->AddText(ImVec2(textX, textY), IM_COL32(245, 245, 250, 255), buf);
+                }
+            }
+
             ImGui::Render();
             ImDrawData* draw_data = ImGui::GetDrawData();
             ImGui_ImplMetal_RenderDrawData(draw_data, commandBuffer, renderEncoder);
@@ -19101,18 +19178,25 @@ DrawLine(HUD, s2, s6, 1.3f, COLOR_RED);
 // 人物绘制数量
 
 //人数绘制
-                            /*if (totalEnemies > 0 || totalBots > 0) {
-    std::wstring numi = L"Players [ " + std::to_wstring(totalEnemies) +
-                        L" ]  Bots [ " + std::to_wstring(totalBots) + L" ] ";
-    tslFont->LegacyFontSize = 20;
-    DrawTextcan(HUD, FString(numi), {(float) screenWidth / 2, 90},//原y80尝试85 85尝试90
-                红色, COLOR_BLACK);
-}else if(totalEnemies + totalBots < 1){
-std::wstring numi = L"[ SAFE ]";
-    tslFont->LegacyFontSize = 20;
-    DrawTextcan(HUD, FString(numi), {(float) screenWidth / 2, 90},//原y80尝试85 85尝试90
-                绿色, COLOR_BLACK);
-}*/
+                            //人数绘制 (Update real-time atomic counts for VIP HUD)
+    g_totalEnemies = totalEnemies;
+    g_totalBots = totalBots;
+    g_lastESPUpdateTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+
+    if (Config.ESPMenu.EnemyCount) {
+        if (totalEnemies > 0 || totalBots > 0) {
+            std::wstring numi = L"Players [ " + std::to_wstring(totalEnemies) +
+                                L" ]  Bots [ " + std::to_wstring(totalBots) + L" ] ";
+            tslFont->LegacyFontSize = 18;
+            DrawTextcan(HUD, FString(numi.c_str()), {(float) screenWidth / 2, 85},
+                        红色, COLOR_BLACK);
+        } else {
+            std::wstring numi = L"[ SAFE ]";
+            tslFont->LegacyFontSize = 18;
+            DrawTextcan(HUD, FString(numi.c_str()), {(float) screenWidth / 2, 85},
+                        绿色, COLOR_BLACK);
+        }
+    }
 // 构造显示文本
 
 if(载具){
